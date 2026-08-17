@@ -185,8 +185,8 @@ function saveLoan(){
     .catch(e=>alert('保存失败：'+e.message));
 }
 function delRec(id){if(!confirm('确认删除该记录？'))return;fetch('/api/total/'+id,{method:'DELETE'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);}).then(()=>boot()).catch(e=>alert('删除失败：'+e.message));}
-function markSold(id){if(!confirm('标记为已售并出库？'))return;fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);}).then(()=>boot()).catch(e=>alert('操作失败：'+e.message));}
-function anchorSold(id){if(!confirm('标记为已售？'))return;fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);}).then(()=>boot()).catch(e=>alert('操作失败：'+e.message));}
+function markSold(id){if(!confirm('标记为已售并出库？'))return;fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(()=>boot()).catch(e=>alert('操作失败：'+e.message));}
+function anchorSold(id){if(!confirm('标记为已售？'))return;fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(()=>boot()).catch(e=>alert('操作失败：'+e.message));}
 function closeM(){document.getElementById('modal').classList.remove('on');}
 function val(i){return document.getElementById(i).value;}
 function bind(){document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeM();};}
