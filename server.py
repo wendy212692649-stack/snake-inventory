@@ -66,19 +66,9 @@ _fwd_running = False
 _fwd_pending = False
 
 
-def _bg_forward():
-    """后台异步跑 forward（含图片推送到主播台），不让保存请求被它拖慢/拖垮。
-
-    同步较慢（含图片二次上传，可能 10~40s），故放后台。
-    若同步期间又有新保存，用 _fwd_pending 标记，同步结束后补跑一次，
-    避免遗漏最新的总台账改动。
-    """
+def _run_forward():
+    """在后台线程里执行同步（含图片二次上传，可能 10~40s）。"""
     global _fwd_running, _fwd_pending
-    with _fwd_lock:
-        if _fwd_running:
-            _fwd_pending = True
-            return
-        _fwd_running = True
     try:
         while True:
             cs.run_sync()
@@ -92,6 +82,21 @@ def _bg_forward():
     finally:
         with _fwd_lock:
             _fwd_running = False
+
+
+def _bg_forward():
+    """把 forward 同步放到后台线程执行，避免阻塞保存请求（保存秒回）。
+
+    若同步期间又有新保存，用 _fwd_pending 标记，同步结束后补跑一次，
+    避免遗漏最新的总台账改动。
+    """
+    global _fwd_running, _fwd_pending
+    with _fwd_lock:
+        if _fwd_running:
+            _fwd_pending = True
+            return
+        _fwd_running = True
+    threading.Thread(target=_run_forward, daemon=True).start()
 
 
 @app.route("/api/data")
