@@ -147,6 +147,14 @@ function previewImg(input){
   const p=document.getElementById('imgprev');
   if(input.files&&input.files[0]){const r=new FileReader();r.onload=e=>{p.innerHTML='<img src="'+e.target.result+'" style="max-width:120px;border-radius:10px;border:1px solid var(--line)">';};r.readAsDataURL(input.files[0]);}
 }
+function uploadWithRetry(fd,tries){
+  tries=tries||1;
+  return fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json()).then(j=>{
+    if(j&&j.file_token)return j;
+    if(tries<2)return new Promise(res=>setTimeout(()=>res(uploadWithRetry(fd,tries+1)),800));
+    throw new Error(j&&j.error?('图片上传失败：'+j.error):'图片上传失败：未知错误');
+  }).catch(e=>{ if(tries<2)return new Promise(res=>setTimeout(()=>res(uploadWithRetry(fd,tries+1)),800)); throw e; });
+}
 function saveEdit(){
   const finish=function(imgArr){
     const body={抽屉号:val('f_id'),品种:val('f_sp'),性别:val('f_gd'),处置:val('f_dp'),出生日期:val('f_bd'),体重:Number(val('f_wt')||0),供货价:Number(val('f_sp2')||0),建议价格:val('f_pr')};
@@ -160,10 +168,9 @@ function saveEdit(){
   const fi=document.getElementById('f_img');
   if(fi&&fi.files&&fi.files.length){
     const fd=new FormData();fd.append('file',fi.files[0]);
-    fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json()).then(j=>{
-      if(j&&j.file_token){const ext=(fi.files[0].name.split('.').pop()||'jpg').toLowerCase();const tp={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif'}[ext]||'image/jpeg';finish([{file_token:j.file_token,name:j.name,type:tp}]);}
-      else alert('图片上传失败：'+(j&&j.error||'未知错误'));
-    }).catch(e=>alert('图片上传出错：'+e));
+    uploadWithRetry(fd).then(j=>{
+      const ext=(fi.files[0].name.split('.').pop()||'jpg').toLowerCase();const tp={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif'}[ext]||'image/jpeg';finish([{file_token:j.file_token,name:j.name,type:tp}]);
+    }).catch(e=>alert(e.message));
   } else { finish(null); }
 }
 function openLoan(){
