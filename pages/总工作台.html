@@ -152,7 +152,10 @@ function saveEdit(){
     const body={抽屉号:val('f_id'),品种:val('f_sp'),性别:val('f_gd'),处置:val('f_dp'),出生日期:val('f_bd'),体重:Number(val('f_wt')||0),供货价:Number(val('f_sp2')||0),建议价格:val('f_pr')};
     if(EDITING)body.record_id=EDITING;
     if(imgArr)body['图片']=imgArr;
-    fetch('/api/total',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(()=>{closeM();boot();});
+    fetch('/api/total',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+      .then(()=>{closeM();boot();})
+      .catch(e=>alert('保存失败：'+e.message+'（若照片较大可稍后重试，记录可能已保存）'));
   };
   const fi=document.getElementById('f_img');
   if(fi&&fi.files&&fi.files.length){
@@ -176,11 +179,14 @@ function openLoan(){
 }
 function saveLoan(){
   const body={抽屉号:val('l_id'),品种:val('l_sp'),性别:val('l_gd'),租借方:val('l_party'),租借日期:val('l_sd'),归还日期:val('l_ed'),状态:val('l_st'),备注:val('l_memo')};
-  fetch('/api/loan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(()=>{closeM();boot();});
+  fetch('/api/loan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(()=>{closeM();boot();})
+    .catch(e=>alert('保存失败：'+e.message));
 }
-function delRec(id){if(!confirm('确认删除该记录？'))return;fetch('/api/total/'+id,{method:'DELETE'}).then(()=>boot());}
-function markSold(id){if(!confirm('标记为已售并出库？'))return;fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})}).then(()=>boot());}
-function anchorSold(id){if(!confirm('标记为已售？'))return;fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})}).then(()=>boot());}
+function delRec(id){if(!confirm('确认删除该记录？'))return;fetch('/api/total/'+id,{method:'DELETE'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);}).then(()=>boot()).catch(e=>alert('删除失败：'+e.message));}
+function markSold(id){if(!confirm('标记为已售并出库？'))return;fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);}).then(()=>boot()).catch(e=>alert('操作失败：'+e.message));}
+function anchorSold(id){if(!confirm('标记为已售？'))return;fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);}).then(()=>boot()).catch(e=>alert('操作失败：'+e.message));}
 function closeM(){document.getElementById('modal').classList.remove('on');}
 function val(i){return document.getElementById(i).value;}
 function bind(){document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeM();};}

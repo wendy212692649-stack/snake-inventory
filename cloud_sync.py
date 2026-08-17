@@ -117,23 +117,29 @@ def _download_bytes(url):
     return r.content
 
 
-def _push_image(src_rec, new_anchor_id):
+def _push_image(src_rec, anchor_id, existing_token=None):
+    """把源记录的图片同步到主播看板记录。
+
+    - 源记录无图 -> 跳过
+    - 主播台已有相同 file_token -> 跳过（避免每次 forward 都重复上传）
+    - 否则下载原图字节直接重传到文件2（不再重新编码，省时省流量）
+    """
     att = src_rec.get("fields", {}).get("图片")
     if not isinstance(att, list) or not att:
+        return
+    src_token = att[0].get("file_token")
+    if existing_token == src_token:
         return
     url = att[0].get("url") or att[0].get("tmp_url") or att[0].get("temp_download_url")
     if not url:
         return
     try:
         raw = _download_bytes(url)
-        img = Image.open(io.BytesIO(raw)).convert("RGB")
-        buf = io.BytesIO()
-        img.save(buf, "JPEG", quality=80)
-        # 上传到 drive（归属文件2）
         fn = att[0].get("name") or "snake.jpg"
-        token = f.upload_attachment(FILE2, ANCHOR2, new_anchor_id, "图片",
-                                    _to_tmpfile(buf.getvalue(), fn), name=fn)
-        f.update_record(FILE2, ANCHOR2, new_anchor_id,
+        # 上传原图字节（不重新编码），归属文件2
+        token = f.upload_attachment(FILE2, ANCHOR2, anchor_id, "图片",
+                                    _to_tmpfile(raw, fn), name=fn)
+        f.update_record(FILE2, ANCHOR2, anchor_id,
                         {"图片": [{"file_token": token, "name": fn, "type": "image/jpeg"}]})
     except Exception as e:
         print("  图片推送失败:", e)
@@ -153,6 +159,12 @@ def forward():
     by_src = {r["fields"].get("源记录ID"): r["record_id"]
               for r in anchor if r["fields"].get("源记录ID")}
     anchor_status = {r["record_id"]: r["fields"].get("状态") for r in anchor}
+    # 主播台现有图片 token，用于判断是否需要重新推送
+    anchor_imgs = {}
+    for r in anchor:
+        a = r.get("fields", {}).get("图片")
+        if isinstance(a, list) and a:
+            anchor_imgs[r["record_id"]] = a[0].get("file_token")
     onsale = [r for r in total if r["fields"].get("处置") == "在售"]
     onsale_ids = {r["record_id"] for r in onsale}
     created = updated = 0
@@ -169,6 +181,8 @@ def forward():
             if anchor_status.get(aid) == "已售":
                 continue
             f.update_record(FILE2, ANCHOR2, aid, mapped)
+            # 编辑时也要把（可能更换的）图片同步到主播台
+            _push_image(r, aid, anchor_imgs.get(aid))
             updated += 1
         else:
             new = f.create_record(FILE2, ANCHOR2, mapped)
@@ -221,7 +235,6 @@ def add_total(fields):
     if fields.get("图片"):
         payload["图片"] = fields["图片"]
     rec = f.create_record(FILE1, TOTAL, payload)
-    forward()
     return rec
 
 
@@ -239,13 +252,11 @@ def update_total(record_id, fields):
     if fields.get("图片"):
         payload["图片"] = fields["图片"]
     f.update_record(FILE1, TOTAL, record_id, payload)
-    forward()
     return {"ok": True}
 
 
 def delete_total(record_id):
     f.delete_record(FILE1, TOTAL, record_id)
-    forward()  # 会清掉文件2 对应主播记录
     return {"ok": True}
 
 

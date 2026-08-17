@@ -9,6 +9,7 @@ import os
 import json
 import time
 import tempfile
+import threading
 from flask import Flask, request, send_file, jsonify
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -60,6 +61,39 @@ def _invalidate():
         pass
 
 
+_fwd_lock = threading.Lock()
+_fwd_running = False
+_fwd_pending = False
+
+
+def _bg_forward():
+    """后台异步跑 forward（含图片推送到主播台），不让保存请求被它拖慢/拖垮。
+
+    同步较慢（含图片二次上传，可能 10~40s），故放后台。
+    若同步期间又有新保存，用 _fwd_pending 标记，同步结束后补跑一次，
+    避免遗漏最新的总台账改动。
+    """
+    global _fwd_running, _fwd_pending
+    with _fwd_lock:
+        if _fwd_running:
+            _fwd_pending = True
+            return
+        _fwd_running = True
+    try:
+        while True:
+            cs.run_sync()
+            with _fwd_lock:
+                if _fwd_pending:
+                    _fwd_pending = False
+                    continue
+                break
+    except Exception as e:
+        print("background forward failed:", e)
+    finally:
+        with _fwd_lock:
+            _fwd_running = False
+
+
 @app.route("/api/data")
 def api_data():
     try:
@@ -76,7 +110,8 @@ def api_total():
             res = jsonify(cs.update_total(body["record_id"], body))
         else:
             res = jsonify(cs.add_total(body))
-        _invalidate()
+        _invalidate()      # 立即失效缓存，前端刷新即可看到最新总台账
+        _bg_forward()      # 后台把在售苗子同步到主播台（含图片），不阻塞保存
         return res
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -87,6 +122,7 @@ def api_total_del(record_id):
     try:
         res = jsonify(cs.delete_total(record_id))
         _invalidate()
+        _bg_forward()
         return res
     except Exception as e:
         return jsonify({"error": str(e)}), 500
