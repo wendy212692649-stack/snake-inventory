@@ -10,7 +10,8 @@ import json
 import time
 import tempfile
 import threading
-from flask import Flask, request, send_file, jsonify
+import hashlib
+from flask import Flask, request, send_file, jsonify, make_response
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HTML_DIR = os.path.join(HERE, "pages")  # cloud/pages/ 仅含页面，不暴露源码
@@ -107,6 +108,37 @@ def api_data():
         return jsonify({"error": str(e)}), 500
 
 
+IMG_CACHE_DIR = os.path.join(HERE, ".imgcache")
+IMG_TTL = 3600
+
+
+@app.route("/img")
+def api_img():
+    """图片懒加载端点：前端传飞书附件直链(u)，后端下载一次并缓存，返回 JPEG 字节。"""
+    u = request.args.get("u")
+    if not u:
+        return "missing u", 400
+    h = hashlib.sha1(u.encode("utf-8")).hexdigest()
+    cached = os.path.join(IMG_CACHE_DIR, h + ".jpg")
+    if os.path.exists(cached) and time.time() - os.path.getmtime(cached) < IMG_TTL:
+        with open(cached, "rb") as fh:
+            data = fh.read()
+    else:
+        data = cs.f.attachment_to_bytes([{"url": u}])
+        if not data:
+            return "image fetch failed", 502
+        try:
+            os.makedirs(IMG_CACHE_DIR, exist_ok=True)
+            with open(cached, "wb") as fh:
+                fh.write(data)
+        except Exception:
+            pass
+    resp = make_response(data)
+    resp.headers["Content-Type"] = "image/jpeg"
+    resp.headers["Cache-Control"] = "public, max-age=%d" % IMG_TTL
+    return resp
+
+
 @app.route("/api/total", methods=["POST"])
 def api_total():
     body = request.get_json(force=True, silent=True) or {}
@@ -197,6 +229,17 @@ def api_upload():
             os.remove(tmp)
         except Exception:
             pass
+
+
+def _warm_cache():
+    """应用启动时预热文件缓存，避免冷启动首访慢。"""
+    try:
+        _get_all_cached()
+    except Exception as e:
+        print("warm cache failed:", e)
+
+
+threading.Thread(target=_warm_cache, daemon=True).start()
 
 
 if __name__ == "__main__":

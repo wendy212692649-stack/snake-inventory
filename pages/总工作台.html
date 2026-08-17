@@ -87,7 +87,7 @@ async function boot(){
 }
 function navOther(){return LIVE?(ROLE==='admin'?'/anchor':'/'):(ROLE==='admin'?'主播工作台.html':'总工作台.html');}
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function img(r){return r.img?('<img class="imgc" src="'+r.img+'">'):'<span class="imgc" style="display:inline-flex;align-items:center;justify-content:center;color:#aaa;font-size:10px">无图</span>';}
+function img(r){return r.img_url?('<img class="imgc" src="/img?u='+encodeURIComponent(r.img_url)+'" loading="lazy" onerror="this.style.display=\'none\'">'):'<span class="imgc" style="display:inline-flex;align-items:center;justify-content:center;color:#aaa;font-size:10px">无图</span>';}
 function statusTag(d){const m={在售:'onsale',已售:'sold',自留:'self'};const c=m[d]||'';return '<span class="tag '+c+'">'+esc(d||'—')+'</span>';}
 function price(r){let p=r['建议价格'];return p?('¥'+esc(p)):'—';}
 function opts(arr,sel){return arr.map(o=>('<option '+(o===sel?'selected':'')+'>'+o+'</option>')).join('');}
@@ -127,7 +127,7 @@ function anchorHTML(){
   let h='<p class="sub">仅显示在售苗子 · 主播视角 · '+(LIVE?'可标记已售（自动回写飞书）':'静态快照')+'</p>';
   if(!a.length){h+='<div class="empty">暂无在售</div>';return h;}
   h+='<div class="gallery">';
-  a.forEach(r=>{h+='<div class="card"><img src="'+(r.img||'')+'" onerror="this.style.background=\'#ddd\'"><div class="b"><div class="t">'+esc(r['抽屉号'])+'</div><div class="m">'+esc(r['品种'])+' · '+esc(r['性别'])+' · '+esc(r['出生日期'])+'</div><div class="m">体重 '+esc(r['体重(g)'])+'g · 供货 ¥'+esc(r['供货价'])+'</div><div class="pr">建议 ¥'+esc(r['建议价格']||'—')+'</div>'+(LIVE?'<button class="btn blood sm" style="margin-top:8px" onclick="anchorSold(\''+esc(r.record_id)+'\')">标记已售</button>':'')+'</div></div>';});
+  a.forEach(r=>{h+='<div class="card"><img src="'+(r.img_url?('/img?u='+encodeURIComponent(r.img_url)):'')+'" loading="lazy" onerror="this.style.background=\'#ddd\'"><div class="b"><div class="t">'+esc(r['抽屉号'])+'</div><div class="m">'+esc(r['品种'])+' · '+esc(r['性别'])+' · '+esc(r['出生日期'])+'</div><div class="m">体重 '+esc(r['体重(g)'])+'g · 供货 ¥'+esc(r['供货价'])+'</div><div class="pr">建议 ¥'+esc(r['建议价格']||'—')+'</div>'+(LIVE?'<button class="btn blood sm" style="margin-top:8px" onclick="anchorSold(\''+esc(r.record_id)+'\')">标记已售</button>':'')+'</div></div>';});
   h+='</div>';return h;
 }
 function openEdit(id){
@@ -139,7 +139,7 @@ function openEdit(id){
    '<div class="row2"><div class="fld"><label>性别</label><select id="f_gd">'+opts(['公','母'],v('性别'))+'</select></div><div class="fld"><label>处置</label><select id="f_dp">'+opts(['在售','自留','已售'],v('处置')||'在售')+'</select></div></div>'+
    '<div class="row2"><div class="fld"><label>出生日期</label><input id="f_bd" type="date" value="'+v('出生日期')+'"></div><div class="fld"><label>体重(g)</label><input id="f_wt" type="number" value="'+v('体重(g)')+'"></div></div>'+
    '<div class="row2"><div class="fld"><label>供货价</label><input id="f_sp2" type="number" value="'+v('供货价')+'"></div><div class="fld"><label>建议价格</label><input id="f_pr" value="'+v('建议价格')+'"></div></div>'+
-   '<div class="fld"><label>照片（可选）</label><input id="f_img" type="file" accept="image/*" onchange="previewImg(this)"><div id="imgprev" style="margin-top:8px">'+(r&&r.img?('<img src="'+r.img+'" style="max-width:120px;border-radius:10px;border:1px solid var(--line)">'):'')+'</div><div class="sub" style="margin-top:4px">不选则保留原图（编辑时）/ 不添加（新增时）</div></div>'+
+   '<div class="fld"><label>照片（可选）</label><input id="f_img" type="file" accept="image/*" onchange="previewImg(this)"><div id="imgprev" style="margin-top:8px">'+(r&&r.img_url?('<img src="/img?u='+encodeURIComponent(r.img_url)+'" style="max-width:120px;border-radius:10px;border:1px solid var(--line)">'):'')+'</div><div class="sub" style="margin-top:4px">不选则保留原图（编辑时）/ 不添加（新增时）</div></div>'+
    '<div class="mfoot"><button class="btn ghost" onclick="closeM()">取消</button><button class="btn blood" onclick="saveEdit()">保存</button></div>';
   document.getElementById('modal').classList.add('on');
 }

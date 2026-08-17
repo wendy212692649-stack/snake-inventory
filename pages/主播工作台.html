@@ -78,7 +78,7 @@ async function boot(){
   render();
 }
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function img(r){return r.img?('<img class="imgc" src="'+r.img+'">'):'<span class="imgc" style="display:inline-flex;align-items:center;justify-content:center;color:#aaa;font-size:10px">无图</span>';}
+function img(r){return r.img_url?('<img class="imgc" src="/img?u='+encodeURIComponent(r.img_url)+'" loading="lazy" onerror="this.style.display=\'none\'">'):'<span class="imgc" style="display:inline-flex;align-items:center;justify-content:center;color:#aaa;font-size:10px">无图</span>';}
 function price(r){let p=r['建议价格'];return p?('¥'+esc(p)):'—';}
 function kpi(n,l){return '<div class="kpi"><div class="n serif">'+n+'</div><div class="l">'+l+'</div></div>';}
 function render(){const app=document.getElementById('app');app.innerHTML=anchorHTML();bind();}
@@ -92,7 +92,7 @@ function anchorHTML(){
   h+='<div class="gallery">';
   a.forEach(r=>{
     const sold=r['状态']==='已售';
-    h+='<div class="card'+(sold?' sold':'')+'"><img src="'+(r.img||'')+'" style="cursor:pointer" onclick="zoom(\''+esc(r.record_id)+'\')" onerror="this.style.background=\'#ddd\'"><div class="b">';
+    h+='<div class="card'+(sold?' sold':'')+'"><img src="'+(r.img_url?('/img?u='+encodeURIComponent(r.img_url)):'')+'" style="cursor:pointer" onclick="zoom(\''+esc(r.record_id)+'\')" onerror="this.style.background=\'#ddd\'"><div class="b">';
     if(sold)h+='<span class="tag-sold">已售</span>';
     h+='<div class="t">'+esc(r['抽屉号'])+'</div><div class="m">'+esc(r['品种'])+' · '+esc(r['性别'])+' · '+esc(r['出生日期'])+'</div><div class="m">体重 '+esc(r['体重(g)'])+'g · 供货 ¥'+esc(r['供货价'])+'</div><div class="pr">建议 ¥'+esc(r['建议价格']||'—')+'</div>';
     if(LIVE){
@@ -109,7 +109,7 @@ function zoom(id){
   const sold=r['状态']==='已售';
   const box=document.getElementById('imgBox');
   box.innerHTML='<h3>'+esc(r['抽屉号'])+'</h3>'+
-    '<img src="'+(r.img||'')+'" style="width:100%;border-radius:14px;background:#eee;display:block" onerror="this.style.background=\'#ddd\'">'+
+    '<img src="'+(r.img_url?('/img?u='+encodeURIComponent(r.img_url)):'')+'" style="width:100%;border-radius:14px;background:#eee;display:block" onerror="this.style.background=\'#ddd\'">'+
     '<div class="m" style="margin-top:10px">'+esc(r['品种'])+' · '+esc(r['性别'])+' · '+esc(r['出生日期'])+'</div>'+
     '<div class="m">体重 '+esc(r['体重(g)'])+'g · 供货 ¥'+esc(r['供货价'])+' · 建议 ¥'+esc(r['建议价格']||'—')+'</div>'+
     (LIVE?(sold

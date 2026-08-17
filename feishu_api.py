@@ -15,6 +15,7 @@ APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "")
 BASE = "https://open.feishu.cn/open-apis"
 _TOKEN = {"t": None, "exp": 0}
 _IMG_CACHE = {}  # url -> (ts, data_uri) 图片下载结果缓存，避免每次刷新都重拉飞书拖慢页面
+_IMG_BYTES = {}  # url -> (ts, bytes) 图片字节缓存，配合 /img 懒加载端点
 
 
 def _token():
@@ -155,5 +156,35 @@ def attachment_to_datauri(att_list, max_w=720):
         datauri = "data:image/jpeg;base64," + b64
         _IMG_CACHE[url] = (time.time(), datauri)
         return datauri
+    except Exception:
+        return None
+
+
+def attachment_to_bytes(att_list, max_w=720):
+    """下载附件并压缩为 JPEG 字节（不内联 base64），供 /img 懒加载端点使用。带内存缓存避免重复下载。"""
+    from io import BytesIO
+    from PIL import Image
+    if not isinstance(att_list, list) or not att_list:
+        return None
+    item = att_list[0]
+    url = item.get("url") or item.get("tmp_url") or item.get("temp_download_url")
+    if not url:
+        return None
+    if url in _IMG_BYTES:
+        ts, val = _IMG_BYTES[url]
+        if time.time() - ts < 600:
+            return val
+    try:
+        r = requests.get(url, headers={"Authorization": "Bearer " + _token()}, timeout=20)
+        r.raise_for_status()
+        img = Image.open(BytesIO(r.content)).convert("RGB")
+        if img.width > max_w:
+            h = int(img.height * max_w / img.width)
+            img = img.resize((max_w, h))
+        buf = BytesIO()
+        img.save(buf, "JPEG", quality=72)
+        data = buf.getvalue()
+        _IMG_BYTES[url] = (time.time(), data)
+        return data
     except Exception:
         return None
