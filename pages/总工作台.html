@@ -87,6 +87,25 @@ async function boot(){
 }
 function navOther(){return LIVE?(ROLE==='admin'?'/anchor':'/'):(ROLE==='admin'?'主播工作台.html':'总工作台.html');}
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function banner(msg){const b=document.getElementById('banner');if(b){b.style.display='block';b.textContent=msg;}}
+let _syncing=false;
+function syncAnchor(btn){
+  if(!LIVE){alert('当前为静态快照，无法同步。用云端链接打开可同步。');return;}
+  if(_syncing)return;
+  _syncing=true;
+  if(btn){btn.disabled=true;btn.textContent='同步中…';}
+  banner('⏳ 正在同步到主播台（含图片，约30秒）…');
+  fetch('/api/sync',{method:'POST'}).then(r=>r.json()).catch(()=>{}).finally(()=>pollSync(btn));
+}
+function pollSync(btn){
+  fetch('/api/sync').then(r=>r.json()).then(s=>{
+    if(s.running){setTimeout(()=>pollSync(btn),3000);return;}
+    _syncing=false;
+    if(btn){btn.disabled=false;btn.textContent='立即同步到主播台';}
+    banner('✅ 已同步到主播台'+(s.last?('（'+s.last+'）'):'')+(s.last_error?(' · 注意：'+s.last_error):''));
+    boot();
+  }).catch(()=>{_syncing=false;if(btn){btn.disabled=false;btn.textContent='立即同步到主播台';}banner('⚠ 同步状态获取失败，稍后刷新页面即可');});
+}
 function img(r){return r.img_url?('<img class="imgc" src="/img?u='+encodeURIComponent(r.img_url)+'" loading="lazy" onerror="this.style.display=\'none\'">'):'<span class="imgc" style="display:inline-flex;align-items:center;justify-content:center;color:#aaa;font-size:10px">无图</span>';}
 function statusTag(d){const m={在售:'onsale',已售:'sold',自留:'self'};const c=m[d]||'';return '<span class="tag '+c+'">'+esc(d||'—')+'</span>';}
 function price(r){let p=r['建议价格'];return p?('¥'+esc(p)):'—';}
@@ -111,7 +130,7 @@ function adminHTML(){
   if(!l.length)h+='<tr><td colspan="8" class="empty">暂无租借</td></tr>';
   l.forEach(r=>{h+='<tr data-lid="'+esc(r.record_id)+'"><td class="serif">'+esc(r['抽屉号'])+'</td><td>'+esc(r['品种'])+'</td><td>'+esc(r['性别'])+'</td><td>'+esc(r['租借方'])+'</td><td>'+esc(r['租借日期'])+'</td><td>'+esc(r['归还日期'])+'</td><td>'+statusTag(r['状态'])+'</td><td>'+esc(r['备注'])+'</td></tr>';});
   h+='</tbody></table>';
-  h+='<div class="sect"><span class="dia">◆</span><h2>主播看板（实时）</h2><a class="btn ghost sm" href="'+navOther()+'">打开主播工作台 →</a></div>';
+  h+='<div class="sect"><span class="dia">◆</span><h2>主播看板（实时）</h2><a class="btn ghost sm" href="'+navOther()+'">打开主播工作台 →</a>'+(LIVE?'<button class="btn sm" id="syncBtn" style="margin-left:8px" onclick="syncAnchor(document.getElementById(\'syncBtn\'))">立即同步到主播台</button>':'')+'</div>';
   h+='<p class="sub">当前主播看板在售 '+a.length+' 条。'+(LIVE?'网页改动会自动同步到飞书文件2。':'（静态快照）')+'</p>';
   return h;
 }

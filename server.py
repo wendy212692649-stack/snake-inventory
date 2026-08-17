@@ -65,22 +65,29 @@ def _invalidate():
 _fwd_lock = threading.Lock()
 _fwd_running = False
 _fwd_pending = False
+_sync_state = {"running": False, "last": None, "last_result": None, "last_error": None}
 
 
 def _run_forward():
     """在后台线程里执行同步（含图片二次上传，可能 10~40s）。"""
-    global _fwd_running, _fwd_pending
+    global _fwd_running, _fwd_pending, _sync_state
+    _sync_state["running"] = True
+    _sync_state["last_error"] = None
     try:
         while True:
-            cs.run_sync()
+            result = cs.run_sync()
+            _sync_state["last_result"] = result
+            _sync_state["last"] = time.strftime("%Y-%m-%d %H:%M:%S")
             with _fwd_lock:
                 if _fwd_pending:
                     _fwd_pending = False
                     continue
                 break
     except Exception as e:
+        _sync_state["last_error"] = str(e)
         print("background forward failed:", e)
     finally:
+        _sync_state["running"] = False
         with _fwd_lock:
             _fwd_running = False
 
@@ -198,12 +205,19 @@ def api_recover():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/sync", methods=["POST"])
+@app.route("/api/sync", methods=["POST", "GET"])
 def api_sync():
+    """手动/定时触发主播台同步。POST 立即后台触发并返回；GET 返回当前同步状态。"""
     try:
-        res = jsonify(cs.run_sync())
-        _invalidate()
-        return res
+        if request.method == "POST":
+            _bg_forward()
+            _invalidate()
+            return jsonify({"ok": True, "running": _fwd_running,
+                            "last": _sync_state["last"],
+                            "last_error": _sync_state["last_error"]})
+        return jsonify({"running": _fwd_running, "last": _sync_state["last"],
+                        "last_result": _sync_state["last_result"],
+                        "last_error": _sync_state["last_error"]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
