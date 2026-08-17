@@ -50,6 +50,11 @@ nav a:last-child{border-right:none}
 .row2{display:flex;gap:10px}.row2>*{flex:1}
 .mfoot{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
 .empty{color:var(--muted);font-style:italic;padding:20px 0}
+.card.sold{opacity:.6;filter:grayscale(1);box-shadow:0 2px 8px rgba(15,23,42,.10)}
+.card.sold .b .t{color:var(--muted)}
+.tag-sold{display:inline-block;background:#FEE2E2;color:#B42318;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;margin-bottom:6px;letter-spacing:.5px}
+.btn.ok{background:#16A34A;color:#fff}
+.btn.ok:hover{background:#15803D}
 </style></head>
 <body>
 <nav>
@@ -78,29 +83,45 @@ function price(r){let p=r['建议价格'];return p?('¥'+esc(p)):'—';}
 function kpi(n,l){return '<div class="kpi"><div class="n serif">'+n+'</div><div class="l">'+l+'</div></div>';}
 function render(){const app=document.getElementById('app');app.innerHTML=anchorHTML();bind();}
 function anchorHTML(){
-  const a=(DATA.anchor||[]).filter(r=>r['状态']==='在售'||!r['状态']);
-  let h='<div class="kpis">'+kpi(a.length,'在售苗子')+'</div>';
-  h+='<p class="sub">仅显示在售苗子 · 主播视角 · '+(LIVE?'点击「确认已售」回写飞书，该苗即从看板移除':'静态快照')+'</p>';
-  if(!a.length){h+='<div class="empty">暂无在售</div>';return h;}
+  const a=(DATA.anchor||[]);
+  const onsale=a.filter(r=>r['状态']==='在售'||!r['状态']).length;
+  const sold=a.filter(r=>r['状态']==='已售').length;
+  let h='<div class="kpis">'+kpi(onsale,'在售苗子')+kpi(sold,'已售(留板)')+'</div>';
+  h+='<p class="sub">主播可售看板 · '+(LIVE?'点「确认已售」回写飞书并变灰留板；误点可「恢复售卖」':'静态快照')+'</p>';
+  if(!a.length){h+='<div class="empty">暂无苗子</div>';return h;}
   h+='<div class="gallery">';
-  a.forEach(r=>{h+='<div class="card"><img src="'+(r.img||'')+'" style="cursor:pointer" onclick="zoom(\''+esc(r.record_id)+'\')" onerror="this.style.background=\'#ddd\'"><div class="b"><div class="t">'+esc(r['抽屉号'])+'</div><div class="m">'+esc(r['品种'])+' · '+esc(r['性别'])+' · '+esc(r['出生日期'])+'</div><div class="m">体重 '+esc(r['体重(g)'])+'g · 供货 ¥'+esc(r['供货价'])+'</div><div class="pr">建议 ¥'+esc(r['建议价格']||'—')+'</div>'+(LIVE?'<button class="btn blood sm" style="margin-top:10px;width:100%" onclick="askSold(\''+esc(r.record_id)+'\')">确认已售</button>':'')+'</div></div>';});
+  a.forEach(r=>{
+    const sold=r['状态']==='已售';
+    h+='<div class="card'+(sold?' sold':'')+'"><img src="'+(r.img||'')+'" style="cursor:pointer" onclick="zoom(\''+esc(r.record_id)+'\')" onerror="this.style.background=\'#ddd\'"><div class="b">';
+    if(sold)h+='<span class="tag-sold">已售</span>';
+    h+='<div class="t">'+esc(r['抽屉号'])+'</div><div class="m">'+esc(r['品种'])+' · '+esc(r['性别'])+' · '+esc(r['出生日期'])+'</div><div class="m">体重 '+esc(r['体重(g)'])+'g · 供货 ¥'+esc(r['供货价'])+'</div><div class="pr">建议 ¥'+esc(r['建议价格']||'—')+'</div>';
+    if(LIVE){
+      h+=sold
+        ? '<button class="btn ok sm" style="margin-top:10px;width:100%" onclick="recover(\''+esc(r.record_id)+'\')">恢复售卖</button>'
+        : '<button class="btn blood sm" style="margin-top:10px;width:100%" onclick="askSold(\''+esc(r.record_id)+'\')">确认已售</button>';
+    }
+    h+='</div></div>';
+  });
   h+='</div>';return h;
 }
 function zoom(id){
   const r=(DATA.anchor||[]).find(x=>x.record_id===id); if(!r)return;
+  const sold=r['状态']==='已售';
   const box=document.getElementById('imgBox');
   box.innerHTML='<h3>'+esc(r['抽屉号'])+'</h3>'+
     '<img src="'+(r.img||'')+'" style="width:100%;border-radius:14px;background:#eee;display:block" onerror="this.style.background=\'#ddd\'">'+
     '<div class="m" style="margin-top:10px">'+esc(r['品种'])+' · '+esc(r['性别'])+' · '+esc(r['出生日期'])+'</div>'+
     '<div class="m">体重 '+esc(r['体重(g)'])+'g · 供货 ¥'+esc(r['供货价'])+' · 建议 ¥'+esc(r['建议价格']||'—')+'</div>'+
-    (LIVE?'<div class="mfoot"><button class="btn blood" onclick="askSold(\''+esc(r.record_id)+'\')">确认已售</button></div>':'');
+    (LIVE?(sold
+      ? '<div class="mfoot"><button class="btn ok" onclick="recover(\''+esc(r.record_id)+'\')">恢复售卖</button></div>'
+      : '<div class="mfoot"><button class="btn blood" onclick="askSold(\''+esc(r.record_id)+'\')">确认已售</button></div>'):'');
   document.getElementById('imgModal').classList.add('on');
 }
 function askSold(id){
   const r=(DATA.anchor||[]).find(x=>x.record_id===id); if(!r)return;
   const box=document.getElementById('cBox');
   box.innerHTML='<h3>确认售出</h3>'+
-    '<p class="sub">请核对信息后确认。确认后该苗将从主播看板移除，并同步回写飞书总台账。</p>'+
+    '<p class="sub">请核对信息后确认。确认后该苗将标记为「已售」并同步飞书总台账，在看板上变灰保留，可随时「恢复售卖」。</p>'+
     '<div class="fld"><label>抽屉号</label><input value="'+esc(r['抽屉号'])+'" readonly></div>'+
     '<div class="fld"><label>品种 / 性别</label><input value="'+esc(r['品种'])+' / '+esc(r['性别'])+'" readonly></div>'+
     '<div class="fld"><label>建议价</label><input value="'+esc(r['建议价格']||'—')+'" readonly></div>'+
@@ -108,13 +129,21 @@ function askSold(id){
   document.getElementById('confirmModal').classList.add('on');
 }
 function doSold(id){
-  const r=(DATA.anchor||[]).find(x=>x.record_id===id); if(!r)return;
-  const realId=r['源记录ID']||id;
   closeC();
-  fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:realId})})
+  fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})})
     .then(r=>r.json()).then(d=>{
       const b=document.getElementById('banner');b.style.display='block';b.style.background='#E7F7EE';b.style.borderColor='#B7E4C7';b.style.color='#1B7A45';
-      b.textContent='✓ 已确认售出，该苗已从主播看板移除并同步飞书。';
+      b.textContent='✓ 已确认售出，已同步飞书并留在看板（灰色）。如误操作，点「恢复售卖」即可。';
+      setTimeout(()=>{b.style.display='none';},4000);
+      boot();
+    }).catch(()=>{alert('操作失败，请重试');});
+}
+function recover(id){
+  if(!confirm('恢复为在售（继续售卖）？'))return;
+  fetch('/api/recover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})})
+    .then(r=>r.json()).then(d=>{
+      const b=document.getElementById('banner');b.style.display='block';b.style.background='#E7F1FF';b.style.borderColor='#BFD8FF';b.style.color='#1E54C4';
+      b.textContent='↩ 已恢复为在售，可继续售卖。';
       setTimeout(()=>{b.style.display='none';},3500);
       boot();
     }).catch(()=>{alert('操作失败，请重试');});

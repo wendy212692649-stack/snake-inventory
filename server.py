@@ -114,6 +114,17 @@ def api_mark_sold():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/recover", methods=["POST"])
+def api_recover():
+    body = request.get_json(force=True, silent=True) or {}
+    try:
+        res = jsonify(cs.recover_anchor(body.get("record_id")))
+        _invalidate()
+        return res
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/sync", methods=["POST"])
 def api_sync():
     try:

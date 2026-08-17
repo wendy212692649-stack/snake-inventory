@@ -152,6 +152,7 @@ def forward():
     anchor = f.list_records(FILE2, ANCHOR2)
     by_src = {r["fields"].get("源记录ID"): r["record_id"]
               for r in anchor if r["fields"].get("源记录ID")}
+    anchor_status = {r["record_id"]: r["fields"].get("状态") for r in anchor}
     onsale = [r for r in total if r["fields"].get("处置") == "在售"]
     onsale_ids = {r["record_id"] for r in onsale}
     created = updated = 0
@@ -164,14 +165,18 @@ def forward():
         mapped["状态"] = "在售"
         if r["record_id"] in by_src:
             aid = by_src[r["record_id"]]
+            # 主播已手动标记「已售」的，不要覆盖回在售（保留灰色留板）
+            if anchor_status.get(aid) == "已售":
+                continue
             f.update_record(FILE2, ANCHOR2, aid, mapped)
             updated += 1
         else:
             new = f.create_record(FILE2, ANCHOR2, mapped)
             created += 1
             _push_image(r, new["record_id"])
-    # 清理：文件1 不再在售的，删掉文件2 对应记录
-    stale = [aid for src, aid in by_src.items() if src not in onsale_ids]
+    # 清理：仅当 文件1 已不在售 且 文件2 该条并非「已售」时才删除（已售的保留给主播看灰）
+    stale = [aid for src, aid in by_src.items()
+             if src not in onsale_ids and anchor_status.get(aid) != "已售"]
     if stale:
         f.batch_delete(FILE2, ANCHOR2, stale)
     return {"created": created, "updated": updated, "removed": len(stale)}
@@ -190,8 +195,6 @@ def backward():
             f.update_record(FILE1, TOTAL, src,
                             {"处置": "已售", "出库": int(time.time() * 1000)})
             done += 1
-            # 反向清掉主播表的这条（已售出）
-            f.delete_record(FILE2, ANCHOR2, r["record_id"])
         except Exception as e:
             print("  回写失败", src, e)
     return {"writeback": done}
@@ -263,16 +266,25 @@ def add_loan(fields):
 
 
 def mark_sold(record_id):
-    # record_id 可能来自总台账(FILE1)，也可能来自主播看板(FILE2)。
-    # 主播台传的是文件2的 record_id，需反查其「源记录ID」(总台账id)。
-    target = record_id
-    ids = [r.get("record_id") for r in f.list_records(FILE1, TOTAL)]
-    if target not in ids:
-        for r in f.list_records(FILE2, ANCHOR2):
-            if r.get("record_id") == record_id:
-                target = r.get("fields", {}).get("源记录ID") or target
-                break
-    f.update_record(FILE1, TOTAL, target,
-                    {"处置": "已售", "出库": int(time.time() * 1000)})
-    forward()
+    # record_id 是主播看板(FILE2)的 record_id：标记已售后仍保留在主播看板（变灰），不删除
+    anchor_rows = f.list_records(FILE2, ANCHOR2)
+    row = next((r for r in anchor_rows if r.get("record_id") == record_id), None)
+    src = row["fields"].get("源记录ID") if row else None
+    if src:
+        f.update_record(FILE1, TOTAL, src,
+                        {"处置": "已售", "出库": int(time.time() * 1000)})
+    if row:
+        f.update_record(FILE2, ANCHOR2, record_id, {"状态": "已售"})
+    return {"ok": True, "anchor_record_id": record_id}
+
+
+def recover_anchor(record_id):
+    # 主播台「恢复售卖」：文件2 状态改回在售 + 文件1 处置改回在售
+    anchor_rows = f.list_records(FILE2, ANCHOR2)
+    row = next((r for r in anchor_rows if r.get("record_id") == record_id), None)
+    src = row["fields"].get("源记录ID") if row else None
+    if row:
+        f.update_record(FILE2, ANCHOR2, record_id, {"状态": "在售"})
+    if src:
+        f.update_record(FILE1, TOTAL, src, {"处置": "在售"})
     return {"ok": True}
