@@ -255,6 +255,23 @@ def _warm_cache():
 
 threading.Thread(target=_warm_cache, daemon=True).start()
 
+# 定时自动同步：默认每 5 分钟把总台账同步到主播台。
+# 可在 Railway 环境变量设 SYNC_INTERVAL（秒）调整，例如 900 = 15 分钟。
+_SYNC_INTERVAL = int(os.environ.get("SYNC_INTERVAL", "300"))
+
+
+def _schedule_sync():
+    """后台线程：每隔 SYNC_INTERVAL 秒自动触发一次主播台同步。"""
+    while True:
+        time.sleep(_SYNC_INTERVAL)
+        try:
+            _bg_forward()
+        except Exception as e:
+            print("scheduled sync error:", e)
+
+
+threading.Thread(target=_schedule_sync, daemon=True).start()
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
