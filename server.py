@@ -7,10 +7,14 @@
 """
 import os
 import json
+import time
 from flask import Flask, request, send_file, jsonify
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HTML_DIR = os.path.join(HERE, "pages")  # cloud/pages/ 仅含页面，不暴露源码
+CACHE_DIR = os.path.join(HERE, ".cache")
+CACHE_FILE = os.path.join(CACHE_DIR, "api_data.json")
+CACHE_TTL = 120  # 秒：文件级缓存，避免每次刷新都重拉飞书（写入后自动失效）
 import cloud_sync as cs
 
 app = Flask(__name__, static_folder=HTML_DIR, static_url_path="")
@@ -26,10 +30,39 @@ def anchor():
     return send_file(os.path.join(HTML_DIR, "主播工作台.html"))
 
 
+def _get_all_cached():
+    # 文件级缓存：跨请求/进程/线程共享，避免每次刷新都重拉飞书
+    if os.path.exists(CACHE_FILE):
+        age = time.time() - os.path.getmtime(CACHE_FILE)
+        if age < CACHE_TTL:
+            try:
+                with open(CACHE_FILE, "r", encoding="utf-8") as fh:
+                    return json.load(fh)
+            except Exception:
+                pass
+    data = cs.get_all()
+    try:
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        with open(CACHE_FILE, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, ensure_ascii=False)
+    except Exception:
+        pass
+    return data
+
+
+def _invalidate():
+    """写操作后清空缓存，保证下次拉取是最新数据。"""
+    try:
+        if os.path.exists(CACHE_FILE):
+            os.remove(CACHE_FILE)
+    except Exception:
+        pass
+
+
 @app.route("/api/data")
 def api_data():
     try:
-        return jsonify(cs.get_all())
+        return jsonify(_get_all_cached())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -39,8 +72,11 @@ def api_total():
     body = request.get_json(force=True, silent=True) or {}
     try:
         if body.get("record_id"):
-            return jsonify(cs.update_total(body["record_id"], body))
-        return jsonify(cs.add_total(body))
+            res = jsonify(cs.update_total(body["record_id"], body))
+        else:
+            res = jsonify(cs.add_total(body))
+        _invalidate()
+        return res
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -48,7 +84,9 @@ def api_total():
 @app.route("/api/total/<record_id>", methods=["DELETE"])
 def api_total_del(record_id):
     try:
-        return jsonify(cs.delete_total(record_id))
+        res = jsonify(cs.delete_total(record_id))
+        _invalidate()
+        return res
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -57,7 +95,9 @@ def api_total_del(record_id):
 def api_loan():
     body = request.get_json(force=True, silent=True) or {}
     try:
-        return jsonify(cs.add_loan(body))
+        res = jsonify(cs.add_loan(body))
+        _invalidate()
+        return res
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -66,7 +106,9 @@ def api_loan():
 def api_mark_sold():
     body = request.get_json(force=True, silent=True) or {}
     try:
-        return jsonify(cs.mark_sold(body.get("record_id")))
+        res = jsonify(cs.mark_sold(body.get("record_id")))
+        _invalidate()
+        return res
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -74,7 +116,9 @@ def api_mark_sold():
 @app.route("/api/sync", methods=["POST"])
 def api_sync():
     try:
-        return jsonify(cs.run_sync())
+        res = jsonify(cs.run_sync())
+        _invalidate()
+        return res
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -17,6 +17,7 @@ import time
 import base64
 import requests
 from PIL import Image
+from concurrent.futures import ThreadPoolExecutor
 import feishu_api as f
 
 FILE1 = "OZGLbaZWNavOAcsKH2ccSYBlnCb"
@@ -78,7 +79,7 @@ def _img_datauri(att):
 
 
 def normalize(rec):
-    """API 记录 -> 前端友好 dict（含 record_id）。"""
+    """API 记录 -> 前端友好 dict（图片延迟到并行阶段下载）。"""
     rid = rec.get("record_id")
     fld = rec.get("fields", {})
     out = {"record_id": rid}
@@ -87,16 +88,24 @@ def normalize(rec):
             out[k] = _norm_date(v)
         else:
             out[k] = v
-    # 图片转 data URI
-    if "图片" in fld and isinstance(fld["图片"], list) and fld["图片"]:
-        out["img"] = _img_datauri(fld["图片"])
+    out["_att"] = fld.get("图片")  # 暂存原始附件，供并行下载回填
     return out
+
+
+def _fill_image(o):
+    att = o.pop("_att", None)
+    if isinstance(att, list) and att:
+        o["img"] = _img_datauri(att)
 
 
 def get_all():
     total = [normalize(r) for r in f.list_records(FILE1, TOTAL)]
     loan = [normalize(r) for r in f.list_records(FILE1, LOAN)]
     anchor = [normalize(r) for r in f.list_records(FILE2, ANCHOR2)]
+    all_recs = total + loan + anchor
+    # 并行下载图片，避免 20 张串行拖慢首屏
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        list(ex.map(_fill_image, all_recs))
     return {"total": total, "loan": loan, "anchor": anchor,
             "updated_at": time.strftime("%Y-%m-%d %H:%M")}
 

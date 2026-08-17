@@ -14,6 +14,7 @@ APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "")
 
 BASE = "https://open.feishu.cn/open-apis"
 _TOKEN = {"t": None, "exp": 0}
+_IMG_CACHE = {}  # url -> (ts, data_uri) 图片下载结果缓存，避免每次刷新都重拉飞书拖慢页面
 
 
 def _token():
@@ -128,7 +129,7 @@ def upload_attachment(app_token, table_id, record_id, field_id, file_path, name=
 
 
 def attachment_to_datauri(att_list, max_w=720):
-    """把附件字段（含 temp_download_url）下载并压缩为 data URI。"""
+    """把附件字段（含 temp_download_url）下载并压缩为 data URI。带缓存避免重复下载。"""
     from io import BytesIO
     from PIL import Image
     if not isinstance(att_list, list) or not att_list:
@@ -137,6 +138,10 @@ def attachment_to_datauri(att_list, max_w=720):
     url = item.get("url") or item.get("tmp_url") or item.get("temp_download_url")
     if not url:
         return None
+    if url in _IMG_CACHE:
+        ts, val = _IMG_CACHE[url]
+        if time.time() - ts < 600:  # 10 分钟内复用，避免重复下载
+            return val
     try:
         r = requests.get(url, headers={"Authorization": "Bearer " + _token()}, timeout=20)
         r.raise_for_status()
@@ -147,6 +152,8 @@ def attachment_to_datauri(att_list, max_w=720):
         buf = BytesIO()
         img.save(buf, "JPEG", quality=72)
         b64 = __import__("base64").b64encode(buf.getvalue()).decode()
-        return "data:image/jpeg;base64," + b64
+        datauri = "data:image/jpeg;base64," + b64
+        _IMG_CACHE[url] = (time.time(), datauri)
+        return datauri
     except Exception:
         return None
