@@ -215,6 +215,8 @@ def add_total(fields):
         "建议价格": fields.get("建议价格", ""),
         "处置": fields.get("处置", "在售"),
     }
+    if fields.get("图片"):
+        payload["图片"] = fields["图片"]
     rec = f.create_record(FILE1, TOTAL, payload)
     forward()
     return rec
@@ -231,6 +233,8 @@ def update_total(record_id, fields):
         payload["体重(g)"] = _num(fields["体重(g)"])
     if "供货价" in fields:
         payload["供货价"] = _num(fields["供货价"])
+    if fields.get("图片"):
+        payload["图片"] = fields["图片"]
     f.update_record(FILE1, TOTAL, record_id, payload)
     forward()
     return {"ok": True}

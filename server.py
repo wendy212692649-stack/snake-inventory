@@ -8,6 +8,7 @@
 import os
 import json
 import time
+import tempfile
 from flask import Flask, request, send_file, jsonify
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -121,6 +122,29 @@ def api_sync():
         return res
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/upload", methods=["POST"])
+def api_upload():
+    """接收网页上传的图片，存到飞书文件1 的附件空间，返回 file_token。"""
+    up = request.files.get("file")
+    if not up:
+        return jsonify({"error": "未收到文件"}), 400
+    name = up.filename or "snake.jpg"
+    suffix = os.path.splitext(name)[1].lower() or ".jpg"
+    fd, tmp = tempfile.mkstemp(suffix=suffix)
+    os.close(fd)
+    up.save(tmp)
+    try:
+        token = cs.f.upload_attachment(cs.FILE1, cs.TOTAL, None, "图片", tmp, name=name)
+        return jsonify({"file_token": token, "name": name})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        try:
+            os.remove(tmp)
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

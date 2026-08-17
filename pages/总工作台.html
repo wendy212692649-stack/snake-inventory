@@ -139,13 +139,29 @@ function openEdit(id){
    '<div class="row2"><div class="fld"><label>性别</label><select id="f_gd">'+opts(['公','母'],v('性别'))+'</select></div><div class="fld"><label>处置</label><select id="f_dp">'+opts(['在售','自留','已售'],v('处置')||'在售')+'</select></div></div>'+
    '<div class="row2"><div class="fld"><label>出生日期</label><input id="f_bd" type="date" value="'+v('出生日期')+'"></div><div class="fld"><label>体重(g)</label><input id="f_wt" type="number" value="'+v('体重(g)')+'"></div></div>'+
    '<div class="row2"><div class="fld"><label>供货价</label><input id="f_sp2" type="number" value="'+v('供货价')+'"></div><div class="fld"><label>建议价格</label><input id="f_pr" value="'+v('建议价格')+'"></div></div>'+
+   '<div class="fld"><label>照片（可选）</label><input id="f_img" type="file" accept="image/*" onchange="previewImg(this)"><div id="imgprev" style="margin-top:8px">'+(r&&r.img?('<img src="'+r.img+'" style="max-width:120px;border-radius:10px;border:1px solid var(--line)">'):'')+'</div><div class="sub" style="margin-top:4px">不选则保留原图（编辑时）/ 不添加（新增时）</div></div>'+
    '<div class="mfoot"><button class="btn ghost" onclick="closeM()">取消</button><button class="btn blood" onclick="saveEdit()">保存</button></div>';
   document.getElementById('modal').classList.add('on');
 }
+function previewImg(input){
+  const p=document.getElementById('imgprev');
+  if(input.files&&input.files[0]){const r=new FileReader();r.onload=e=>{p.innerHTML='<img src="'+e.target.result+'" style="max-width:120px;border-radius:10px;border:1px solid var(--line)">';};r.readAsDataURL(input.files[0]);}
+}
 function saveEdit(){
-  const body={抽屉号:val('f_id'),品种:val('f_sp'),性别:val('f_gd'),处置:val('f_dp'),出生日期:val('f_bd'),体重:Number(val('f_wt')||0),供货价:Number(val('f_sp2')||0),建议价格:val('f_pr')};
-  if(EDITING)body.record_id=EDITING;
-  fetch('/api/total',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(()=>{closeM();boot();});
+  const finish=function(imgArr){
+    const body={抽屉号:val('f_id'),品种:val('f_sp'),性别:val('f_gd'),处置:val('f_dp'),出生日期:val('f_bd'),体重:Number(val('f_wt')||0),供货价:Number(val('f_sp2')||0),建议价格:val('f_pr')};
+    if(EDITING)body.record_id=EDITING;
+    if(imgArr)body['图片']=imgArr;
+    fetch('/api/total',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(()=>{closeM();boot();});
+  };
+  const fi=document.getElementById('f_img');
+  if(fi&&fi.files&&fi.files.length){
+    const fd=new FormData();fd.append('file',fi.files[0]);
+    fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json()).then(j=>{
+      if(j&&j.file_token){const ext=(fi.files[0].name.split('.').pop()||'jpg').toLowerCase();const tp={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif'}[ext]||'image/jpeg';finish([{file_token:j.file_token,name:j.name,type:tp}]);}
+      else alert('图片上传失败：'+(j&&j.error||'未知错误'));
+    }).catch(e=>alert('图片上传出错：'+e));
+  } else { finish(null); }
 }
 function openLoan(){
   if(!LIVE)return;LEDIT=true;
