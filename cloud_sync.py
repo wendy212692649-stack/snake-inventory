@@ -263,7 +263,16 @@ def add_loan(fields):
 
 
 def mark_sold(record_id):
-    f.update_record(FILE1, TOTAL, record_id,
+    # record_id 可能来自总台账(FILE1)，也可能来自主播看板(FILE2)。
+    # 主播台传的是文件2的 record_id，需反查其「源记录ID」(总台账id)。
+    target = record_id
+    ids = [r.get("record_id") for r in f.list_records(FILE1, TOTAL)]
+    if target not in ids:
+        for r in f.list_records(FILE2, ANCHOR2):
+            if r.get("record_id") == record_id:
+                target = r.get("fields", {}).get("源记录ID") or target
+                break
+    f.update_record(FILE1, TOTAL, target,
                     {"处置": "已售", "出库": int(time.time() * 1000)})
     forward()
     return {"ok": True}
