@@ -1,0 +1,173 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>变温领地 · 主播工作台</title><style>
+:root{--bg:#FBFAF7;--panel:#FFFFFF;--ink:#1A211C;--muted:#76837B;
+--line:#E4EEE9;--soft:#EAF4EF;--mint:#2BC48A;--mint-d:#1FA677;--lemon:#FFE45E;
+--coral:#FF7A7A;--ink-soft:#5C6B62}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;
+font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased}
+.serif{font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;font-weight:700}
+header{padding:26px 22px 16px;background:linear-gradient(180deg,#FFFFFF,#FBFAF7);border-bottom:3px solid var(--mint)}
+h1{margin:0;font-weight:800;letter-spacing:1px;font-size:24px;color:var(--ink)}
+h1::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--mint);margin-right:10px;vertical-align:middle}
+.sub{color:var(--muted);font-size:12px;margin-top:6px;letter-spacing:.5px}
+nav{display:flex;background:#0F1C16}
+nav a{flex:1;text-align:center;color:#CFE9DD;text-decoration:none;padding:13px 6px;font-size:13px;letter-spacing:1px;border-right:1px solid #1E3329;font-weight:600}
+nav a.active{background:var(--mint);color:#0E2A1E}
+nav a:last-child{border-right:none}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 70px}
+.kpis{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.kpi{flex:1;min-width:108px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 2px 10px rgba(43,196,138,.07)}
+.kpi .n{font-size:28px;font-weight:800;color:var(--mint-d);line-height:1}
+.kpi .l{font-size:11px;color:var(--muted);letter-spacing:.5px;margin-top:6px}
+.sect{margin:26px 0 10px;display:flex;align-items:center;gap:10px}
+.sect h2{font-size:17px;font-weight:800;letter-spacing:.5px;margin:0}
+.dia{color:var(--mint);font-size:14px}
+.btn{background:var(--mint);color:#0E2A1E;border:none;padding:8px 15px;font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;border-radius:10px;transition:.15s}
+.btn:hover{background:var(--mint-d);color:#fff}
+.btn.ghost{background:transparent;color:var(--mint-d);border:1.5px solid var(--mint)}
+.btn.blood{background:var(--coral);color:#fff}
+.btn.blood:hover{background:#F25C5C}
+.btn.sm{padding:5px 11px;font-size:11px}
+table{width:100%;border-collapse:separate;border-spacing:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(43,196,138,.06)}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;font-size:12.5px;vertical-align:middle}
+th{background:#0F1C16;color:#CFE9DD;font-weight:600;letter-spacing:.5px;font-size:11px}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even){background:#F6FBF8}
+.row-onsale td:first-child{box-shadow:inset 3px 0 0 var(--mint)}
+.row-sold{opacity:.5}
+.row-sold td:first-child{box-shadow:inset 3px 0 0 var(--muted)}
+.row-sold td:first-child, .row-sold td:nth-child(2){text-decoration:line-through}
+.tag{display:inline-block;padding:2px 10px;border:1px solid var(--line);font-size:11px;border-radius:20px;font-weight:600}
+.tag.onsale{color:var(--mint-d);border-color:var(--mint);background:#EAF9F1}
+.tag.sold{color:var(--muted);background:#F2F4F3}
+.tag.self{color:var(--ink-soft)}
+.imgc{width:52px;height:52px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#eee;display:inline-block}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 4px 16px rgba(43,196,138,.10);transition:.15s}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(43,196,138,.18)}
+.card img{width:100%;height:170px;object-fit:cover;background:#eee;display:block}
+.card .b{padding:12px 14px}
+.card .t{font-size:16px;font-weight:800;letter-spacing:.3px}
+.card .m{color:var(--muted);font-size:12px;margin-top:4px}
+.card .pr{color:var(--mint-d);font-weight:800;margin-top:8px;font-size:15px}
+.banner{display:none;background:#FFF8E6;border:1px solid var(--lemon);color:#8A6D00;padding:10px 14px;font-size:12px;margin:14px 0;border-radius:12px}
+.modal{position:fixed;inset:0;background:rgba(15,28,22,.5);display:none;align-items:center;justify-content:center;z-index:50}
+.modal.on{display:flex}
+.mbox{background:var(--bg);border:1px solid var(--line);border-radius:20px;width:min(540px,92vw);max-height:88vh;overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.mbox h3{font-weight:800;letter-spacing:.5px;margin:0 0 14px}
+.fld{margin:10px 0}
+.fld label{display:block;font-size:11px;color:var(--muted);letter-spacing:.5px;margin-bottom:4px;font-weight:600}
+.fld input,.fld select,.fld textarea{width:100%;padding:9px 10px;border:1.5px solid var(--line);background:#fff;font-size:13px;color:var(--ink);border-radius:10px;outline:none;transition:.15s}
+.fld input:focus,.fld select:focus{border-color:var(--mint)}
+.row2{display:flex;gap:10px}.row2>*{flex:1}
+.mfoot{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.empty{color:var(--muted);font-style:italic;padding:20px 0}
+</style></head>
+<body>
+<nav>
+<a href="/" class="">总工作台</a>
+<a href="/anchor" class="active">主播工作台</a>
+</nav>
+<header><h1>变温领地</h1><div class="sub">仅显示在售 · 主播可售看板</div></header>
+<div class="wrap">
+<div class="banner" id="banner"></div>
+<div id="app"></div>
+</div>
+<div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
+<script>const EMBED={"total": [{"抽屉号": "2F-A01测试111", "体重(g)": 18, "建议价格": "180-260", "性别": "公", "处置": "在售", "供货价": 80, "品种": "王蛇", "图片": {"file_token": "HOB0b9253oeoHHxUEYWcm6u7nOe", "name": "Careers4u.png", "size": 155089}, "出生日期": "2026-07-18", "record_id": "2F-A01测试111"}, {"抽屉号": "2F-A02", "体重(g)": 21, "建议价格": "180-260", "性别": "母", "处置": "在售", "供货价": 80, "品种": "玉米", "出生日期": "2026-07-14", "record_id": "2F-A02"}, {"抽屉号": "2F-A03", "体重(g)": 45, "建议价格": "380-450", "性别": "公", "处置": "在售", "供货价": 120, "品种": "牛蛇", "出生日期": "2026-07-01", "record_id": "2F-A03"}, {"抽屉号": "2F-A05", "体重(g)": 40, "建议价格": "420-520", "性别": "母", "处置": "在售", "供货价": 150, "品种": "猪鼻", "出生日期": "2026-06-26", "record_id": "2F-A05"}, {"抽屉号": "2F-A07", "体重(g)": 24, "建议价格": "180", "性别": "母", "处置": "自留", "供货价": 80, "品种": "玉米", "出生日期": "2026-06-20", "record_id": "2F-A07"}, {"抽屉号": "2F-A09", "发货": "2026-08-15T14:10:00.000+08:00", "体重(g)": 42, "建议价格": "380", "性别": "母", "处置": "在售", "供货价": 120, "品种": "牛蛇", "出库": "2026-08-16T13:58:22.000+08:00", "出生日期": "2026-07-06", "record_id": "2F-A09"}, {"抽屉号": "测试", "体重(g)": 50, "建议价格": "333", "性别": "公", "处置": "在售", "供货价": 111111, "品种": "牛蛇", "图片": {"file_token": "K2VdbyqjhoryauxBI2LcP2hznVf", "name": "微信图片_20260227100718_2194_83.jpg", "size": 1520775}, "出生日期": "2026-08-13", "record_id": "测试"}, {"record_id": null}], "loan": [{"抽屉号": "2F-C05", "出生日期": "2026-06-30", "租借日期": "2026-08-14", "租借方": "蛇友老王", "状态": "在借", "体重(g)": 23, "备注": "展示用，归还时查体外寄生虫", "性别": "公", "品种": "玉米", "归还日期": "2026-08-21", "record_id": "2F-C05"}, {"抽屉号": "2F-C06", "出生日期": "2026-05-20", "租借日期": "2026-08-10", "租借方": "爬宠展A", "状态": "已逾期", "体重(g)": 60, "备注": "展会延期，已催归还", "性别": "母", "品种": "牛蛇", "归还日期": "2026-08-16", "record_id": "2F-C06"}, {"抽屉号": "2F-C07", "出生日期": "2026-04-15", "租借日期": "2026-07-01", "租借方": "科普馆", "状态": "已归还", "体重(g)": 55, "备注": "已回，健康无异常", "性别": "公", "品种": "猪鼻王蛇", "归还日期": "2026-08-01", "record_id": "2F-C07"}], "anchor": [{"抽屉号": "2F-A02", "源记录ID": "recvslxdL43Dri", "品种": "玉米", "建议价格": "180-260", "供货价": 80, "体重(g)": 21, "性别": "母", "状态": "在售", "出生日期": "2026-07-14", "record_id": "recvslxdL43Dri"}, {"抽屉号": "2F-A03", "源记录ID": "recvslxdL4c3bN", "品种": "牛蛇", "建议价格": "380-450", "供货价": 120, "体重(g)": 45, "性别": "公", "状态": "在售", "出生日期": "2026-07-01", "record_id": "recvslxdL4c3bN"}, {"抽屉号": "2F-A05", "源记录ID": "recvslxdL4apdB", "品种": "猪鼻", "建议价格": "420-520", "供货价": 150, "体重(g)": 40, "性别": "母", "状态": "在售", "出生日期": "2026-06-26", "record_id": "recvslxdL4apdB"}, {"抽屉号": "2F-A01测试111", "源记录ID": "recvslxdL4jUVK", "品种": "王蛇", "图片": {"file_token": "B0eNb19wTo1OtRxgYcicANCwnMg", "name": "recvslxdL4jUVK_Careers4u.png", "size": 155089}, "建议价格": "180-260", "供货价": 80, "体重(g)": 18, "性别": "公", "状态": "在售", "出生日期": "2026-07-18", "record_id": "recvslxdL4jUVK"}, {"抽屉号": "测试", "源记录ID": "recvsqRheVT4Uo", "品种": "牛蛇", "图片": {"file_token": "ErsMb9kgGouPR0x2WgQc4grhnfc", "name": "recvsqRheVT4Uo_微信图片_20260227100718_2194_83.jpg", "size": 1520775}, "建议价格": "333", "供货价": 111111, "体重(g)": 50, "性别": "公", "状态": "在售", "出生日期": "2026-08-13", "record_id": "recvsqRheVT4Uo"}, {"抽屉号": "2F-A09", "源记录ID": "recvslxdL4Z6pa", "品种": "牛蛇", "建议价格": "380", "供货价": 120, "体重(g)": 42, "性别": "母", "状态": "在售", "出生日期": "2026-07-06", "record_id": "recvslxdL4Z6pa"}], "updated_at": "2026-08-16 14:43"};const ROLE="anchor";
+let DATA=null,LIVE=false,EDITING=null,LEDIT=null;
+async function boot(){
+  try{const r=await fetch('/api/data');if(r.ok){DATA=await r.json();LIVE=true;}}catch(e){}
+  if(!DATA){DATA=EMBED;LIVE=false;
+    const b=document.getElementById('banner');b.style.display='block';
+    b.textContent='⚠ 当前为静态快照（只读）。用云端链接打开可编辑并实时同步飞书。';}
+  render();
+}
+function navOther(){return LIVE?(ROLE==='admin'?'/anchor':'/'):(ROLE==='admin'?'主播工作台.html':'总工作台.html');}
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function img(r){return r.img?('<img class="imgc" src="'+r.img+'">'):'<span class="imgc" style="display:inline-flex;align-items:center;justify-content:center;color:#aaa;font-size:10px">无图</span>';}
+function statusTag(d){const m={在售:'onsale',已售:'sold',自留:'self'};const c=m[d]||'';return '<span class="tag '+c+'">'+esc(d||'—')+'</span>';}
+function price(r){let p=r['建议价格'];return p?('¥'+esc(p)):'—';}
+function opts(arr,sel){return arr.map(o=>('<option '+(o===sel?'selected':'')+'>'+o+'</option>')).join('');}
+function render(){const app=document.getElementById('app');app.innerHTML=(ROLE==='admin')?adminHTML():anchorHTML();bind();}
+function kpi(n,l){return '<div class="kpi"><div class="n serif">'+n+'</div><div class="l">'+l+'</div></div>';}
+function adminHTML(){
+  const t=DATA.total||[],l=DATA.loan||[],a=DATA.anchor||[];
+  const onsale=t.filter(r=>r['处置']==='在售').length;
+  const sold=t.filter(r=>r['处置']==='已售').length;
+  const self=t.filter(r=>r['处置']==='自留').length;
+  const loanAct=l.filter(r=>r['状态']==='租借中').length;
+  let h='<div class="kpis">'+kpi(onsale,'在售苗子')+kpi(sold,'已售')+kpi(self,'自留')+kpi(t.length,'总台账')+kpi(loanAct,'租借中')+kpi(a.length,'主播看板在售')+'</div>';
+  h+='<div class="sect"><span class="dia">◆</span><h2>总台账</h2>'+(LIVE?'<button class="btn blood sm" style="margin-left:auto" onclick="openEdit()">+ 新增苗子</button>':'')+'</div>';
+  h+='<table><thead><tr><th>图</th><th>抽屉号</th><th>品种</th><th>性别</th><th>出生</th><th>体重(g)</th><th>供货价</th><th>建议价</th><th>处置</th><th>出库</th><th>操作</th></tr></thead><tbody>';
+  if(!t.length)h+='<tr><td colspan="11" class="empty">暂无记录</td></tr>';
+  t.forEach(r=>{const cls=r['处置']==='在售'?'row-onsale':(r['处置']==='已售'?'row-sold':'');
+    h+='<tr class="'+cls+'" data-id="'+esc(r.record_id)+'"><td>'+img(r)+'</td><td class="serif">'+esc(r['抽屉号'])+'</td><td>'+esc(r['品种'])+'</td><td>'+esc(r['性别'])+'</td><td>'+esc(r['出生日期'])+'</td><td>'+esc(r['体重(g)'])+'</td><td>'+esc(r['供货价'])+'</td><td>'+price(r)+'</td><td>'+statusTag(r['处置'])+'</td><td>'+esc(r['出库']||'')+'</td><td>'+actions(r)+'</td></tr>';});
+  h+='</tbody></table>';
+  h+='<div class="sect"><span class="dia">◆</span><h2>租借台账</h2>'+(LIVE?'<button class="btn blood sm" style="margin-left:auto" onclick="openLoan()">+ 新增租借</button>':'')+'</div>';
+  h+='<table><thead><tr><th>抽屉号</th><th>品种</th><th>性别</th><th>租借方</th><th>租借日期</th><th>归还日期</th><th>状态</th><th>备注</th></tr></thead><tbody>';
+  if(!l.length)h+='<tr><td colspan="8" class="empty">暂无租借</td></tr>';
+  l.forEach(r=>{h+='<tr data-lid="'+esc(r.record_id)+'"><td class="serif">'+esc(r['抽屉号'])+'</td><td>'+esc(r['品种'])+'</td><td>'+esc(r['性别'])+'</td><td>'+esc(r['租借方'])+'</td><td>'+esc(r['租借日期'])+'</td><td>'+esc(r['归还日期'])+'</td><td>'+statusTag(r['状态'])+'</td><td>'+esc(r['备注'])+'</td></tr>';});
+  h+='</tbody></table>';
+  h+='<div class="sect"><span class="dia">◆</span><h2>主播看板（实时）</h2><a class="btn ghost sm" href="'+navOther()+'">打开主播工作台 →</a></div>';
+  h+='<p class="sub">当前主播看板在售 '+a.length+' 条。'+(LIVE?'网页改动会自动同步到飞书文件2。':'（静态快照）')+'</p>';
+  return h;
+}
+function actions(r){
+  if(!LIVE)return '<span class="sub">只读</span>';
+  let h='<button class="btn sm" onclick="openEdit(\''+esc(r.record_id)+'\')">编辑</button> ';
+  if(r['处置']!=='已售')h+='<button class="btn blood sm" onclick="markSold(\''+esc(r.record_id)+'\')">标记已售</button> ';
+  h+='<button class="btn ghost sm" onclick="delRec(\''+esc(r.record_id)+'\')">删除</button>';
+  return h;
+}
+function anchorHTML(){
+  const a=(DATA.anchor||[]).filter(r=>r['状态']==='在售'||!r['状态']);
+  let h='<p class="sub">仅显示在售苗子 · 主播视角 · '+(LIVE?'可标记已售（自动回写飞书）':'静态快照')+'</p>';
+  if(!a.length){h+='<div class="empty">暂无在售</div>';return h;}
+  h+='<div class="gallery">';
+  a.forEach(r=>{h+='<div class="card"><img src="'+(r.img||'')+'" onerror="this.style.background=\'#ddd\'"><div class="b"><div class="t">'+esc(r['抽屉号'])+'</div><div class="m">'+esc(r['品种'])+' · '+esc(r['性别'])+' · '+esc(r['出生日期'])+'</div><div class="m">体重 '+esc(r['体重(g)'])+'g · 供货 ¥'+esc(r['供货价'])+'</div><div class="pr">建议 ¥'+esc(r['建议价格']||'—')+'</div>'+(LIVE?'<button class="btn blood sm" style="margin-top:8px" onclick="anchorSold(\''+esc(r.record_id)+'\')">标记已售</button>':'')+'</div></div>';});
+  h+='</div>';return h;
+}
+function openEdit(id){
+  if(!LIVE)return;let r=id?(DATA.total||[]).find(x=>x.record_id===id):null;EDITING=id;
+  const v=k=>r?esc(r[k]||''):'';
+  const box=document.getElementById('mbox');
+  box.innerHTML='<h3>'+(id?'编辑苗子':'新增苗子')+'</h3>'+
+   '<div class="row2"><div class="fld"><label>抽屉号</label><input id="f_id" value="'+v('抽屉号')+'"></div><div class="fld"><label>品种</label><select id="f_sp">'+opts(['玉米','牛蛇','猪鼻','王蛇'],v('品种'))+'</select></div></div>'+
+   '<div class="row2"><div class="fld"><label>性别</label><select id="f_gd">'+opts(['公','母'],v('性别'))+'</select></div><div class="fld"><label>处置</label><select id="f_dp">'+opts(['在售','自留','已售'],v('处置')||'在售')+'</select></div></div>'+
+   '<div class="row2"><div class="fld"><label>出生日期</label><input id="f_bd" type="date" value="'+v('出生日期')+'"></div><div class="fld"><label>体重(g)</label><input id="f_wt" type="number" value="'+v('体重(g)')+'"></div></div>'+
+   '<div class="row2"><div class="fld"><label>供货价</label><input id="f_sp2" type="number" value="'+v('供货价')+'"></div><div class="fld"><label>建议价格</label><input id="f_pr" value="'+v('建议价格')+'"></div></div>'+
+   '<div class="mfoot"><button class="btn ghost" onclick="closeM()">取消</button><button class="btn blood" onclick="saveEdit()">保存</button></div>';
+  document.getElementById('modal').classList.add('on');
+}
+function saveEdit(){
+  const body={抽屉号:val('f_id'),品种:val('f_sp'),性别:val('f_gd'),处置:val('f_dp'),出生日期:val('f_bd'),体重:Number(val('f_wt')||0),供货价:Number(val('f_sp2')||0),建议价格:val('f_pr')};
+  if(EDITING)body.record_id=EDITING;
+  fetch('/api/total',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(()=>{closeM();boot();});
+}
+function openLoan(){
+  if(!LIVE)return;LEDIT=true;
+  const box=document.getElementById('mbox');
+  box.innerHTML='<h3>新增租借</h3>'+
+   '<div class="row2"><div class="fld"><label>抽屉号</label><input id="l_id"></div><div class="fld"><label>品种</label><select id="l_sp">'+opts(['玉米','牛蛇','猪鼻','王蛇'],'')+'</select></div></div>'+
+   '<div class="row2"><div class="fld"><label>性别</label><select id="l_gd">'+opts(['公','母'],'')+'</select></div><div class="fld"><label>租借方</label><input id="l_party"></div></div>'+
+   '<div class="row2"><div class="fld"><label>租借日期</label><input id="l_sd" type="date"></div><div class="fld"><label>归还日期</label><input id="l_ed" type="date"></div></div>'+
+   '<div class="row2"><div class="fld"><label>状态</label><select id="l_st">'+opts(['租借中','逾期','已归还'],'租借中')+'</select></div><div class="fld"><label>备注</label><input id="l_memo"></div></div>'+
+   '<div class="mfoot"><button class="btn ghost" onclick="closeM()">取消</button><button class="btn blood" onclick="saveLoan()">保存</button></div>';
+  document.getElementById('modal').classList.add('on');
+}
+function saveLoan(){
+  const body={抽屉号:val('l_id'),品种:val('l_sp'),性别:val('l_gd'),租借方:val('l_party'),租借日期:val('l_sd'),归还日期:val('l_ed'),状态:val('l_st'),备注:val('l_memo')};
+  fetch('/api/loan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(()=>{closeM();boot();});
+}
+function delRec(id){if(!confirm('确认删除该记录？'))return;fetch('/api/total/'+id,{method:'DELETE'}).then(()=>boot());}
+function markSold(id){if(!confirm('标记为已售并出库？'))return;fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})}).then(()=>boot());}
+function anchorSold(id){if(!confirm('标记为已售？'))return;fetch('/api/mark_sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_id:id})}).then(()=>boot());}
+function closeM(){document.getElementById('modal').classList.remove('on');}
+function val(i){return document.getElementById(i).value;}
+function bind(){document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeM();};}
+boot();
+</script>
+</body></html>
