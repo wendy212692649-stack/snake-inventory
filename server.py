@@ -200,6 +200,37 @@ def api_mark_sold():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/sell", methods=["POST"])
+def api_sell():
+    """总台账侧登记售出：一步写入 处置=已售 + 售出价/收货方/收款状态/收款日期。"""
+    body = request.get_json(force=True, silent=True) or {}
+    rid = body.get("record_id")
+    if not rid:
+        return jsonify({"error": "缺少 record_id"}), 400
+    try:
+        res = jsonify(cs.sell_total(rid, body))
+        _invalidate()
+        _bg_forward()
+        return res
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/paid", methods=["POST"])
+def api_paid():
+    """一键收款：标记为已收并写入收款日期（默认今天）。"""
+    body = request.get_json(force=True, silent=True) or {}
+    rid = body.get("record_id")
+    if not rid:
+        return jsonify({"error": "缺少 record_id"}), 400
+    try:
+        res = jsonify(cs.set_paid(rid, body.get("收款日期")))
+        _invalidate()
+        return res
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/recover", methods=["POST"])
 def api_recover():
     body = request.get_json(force=True, silent=True) or {}

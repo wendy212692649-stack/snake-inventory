@@ -58,6 +58,52 @@ nav a:last-child{border-right:none}
 .tag-sold{display:inline-block;background:rgba(255,107,107,.16);color:#FF9A9A;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;margin-bottom:6px;letter-spacing:.5px}
 .btn.ok{background:var(--cyan);color:#06231F;box-shadow:0 2px 12px rgba(45,212,191,.22)}
 .btn.ok:hover{background:var(--cyan-d);color:#06231F}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.tools input,.tools select{background:var(--panel2);color:var(--ink);border:1.5px solid var(--line);
+  border-radius:10px;padding:8px 10px;font-size:13px;outline:none}
+.tools input:focus,.tools select:focus{border-color:var(--blue)}
+
+/* ============ 手机端适配（主播多在手机上看货） ============ */
+@media(max-width:820px){
+  header{padding:14px 16px 11px}
+  h1{font-size:19px;letter-spacing:.5px}
+  .sub{font-size:11.5px;margin-top:4px}
+  nav a{padding:12px 6px;font-size:12.5px}
+  .wrap{padding:12px 12px calc(26px + env(safe-area-inset-bottom))}
+  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+  .kpi{min-width:0;padding:11px 10px;border-radius:14px}
+  .kpi .n{font-size:22px}
+  .kpi .l{font-size:10px;margin-top:3px}
+  /* 两列图墙：一屏能看到更多苗子 */
+  .gallery{grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+  .card{border-radius:14px}
+  .card:hover{transform:none;box-shadow:0 4px 18px rgba(0,0,0,.4);border-color:var(--line)}
+  .card img{height:124px}
+  .card .b{padding:9px 10px}
+  .card .t{font-size:14px}
+  .card .m{font-size:11px;margin-top:2px;line-height:1.45}
+  .card .pr{font-size:13px;margin-top:6px}
+  .card .btn.sm{min-height:38px;padding:9px 6px;font-size:12px}
+  .tools input,.tools select{flex:1;min-width:0;font-size:16px;padding:10px}
+  .tools .btn{width:100%;min-height:44px}
+  /* 弹窗 -> 底部抽屉 */
+  .modal{align-items:flex-end}
+  .mbox{width:100%;max-width:none;max-height:93vh;border-radius:22px 22px 0 0;
+        padding:18px 16px calc(20px + env(safe-area-inset-bottom))}
+  .mbox h3{font-size:17px}
+  .row2{flex-direction:column;gap:0}
+  .fld{margin:12px 0}
+  /* 16px 可避免 iOS 聚焦时自动放大页面 */
+  .fld input,.fld select{padding:12px;font-size:16px;border-radius:12px}
+  .mfoot{gap:10px;margin-top:20px}
+  .mfoot .btn{flex:1;min-height:48px;font-size:14px}
+  .btn{min-height:40px}
+  .banner{font-size:12px;padding:10px 12px}
+}
+@media(max-width:380px){
+  .gallery{grid-template-columns:1fr}
+  .card img{height:180px}
+}
 </style></head>
 <body>
 <nav>
@@ -72,7 +118,7 @@ nav a:last-child{border-right:none}
 <div class="modal" id="confirmModal"><div class="mbox" id="cBox"></div></div>
 <script>
 const EMBED={"total":[],"loan":[],"anchor":[]};
-let DATA=null,LIVE=false;
+let DATA=null,LIVE=false,Q='',SHOW_SOLD='all';
 async function boot(){
   try{const r=await fetch('/api/data');if(r.ok){DATA=await r.json();LIVE=true;}}catch(e){}
   if(!DATA){DATA=EMBED;LIVE=false;
@@ -105,14 +151,21 @@ function price(r){let p=r['建议价格'];return p?('¥'+esc(p)):'—';}
 function kpi(n,l){return '<div class="kpi"><div class="n serif">'+n+'</div><div class="l">'+l+'</div></div>';}
 function render(){const app=document.getElementById('app');app.innerHTML=anchorHTML();bind();}
 function anchorHTML(){
-  const a=(DATA.anchor||[]);
+  const a=(DATA.anchor||[]).filter(r=>r.record_id);
   const onsale=a.filter(r=>r['状态']==='在售'||!r['状态']).length;
   const sold=a.filter(r=>r['状态']==='已售').length;
   let h='<div class="kpis">'+kpi(onsale,'在售苗子')+kpi(sold,'已售(留板)')+'</div>';
-  h+='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><p class="sub" style="margin:0">主播可售看板 · '+(LIVE?'点「确认已售」回写飞书并变灰留板；误点可「恢复售卖」':'静态快照')+'</p>'+(LIVE?'<button class="btn sm" id="syncBtn2" onclick="syncAnchor(document.getElementById(\'syncBtn2\'))">同步最新库存</button>':'')+'</div>';
-  if(!a.length){h+='<div class="empty">暂无苗子</div>';return h;}
+  h+='<div class="tools"><input id="q" placeholder="搜索 抽屉号 / 品种" value="'+esc(Q)+'" oninput="setQ(this.value)">'
+    +'<select onchange="setSoldFilter(this.value)"><option value="all" '+(SHOW_SOLD==='all'?'selected':'')+'>全部状态</option><option value="onsale" '+(SHOW_SOLD==='onsale'?'selected':'')+'>只看在售</option><option value="sold" '+(SHOW_SOLD==='sold'?'selected':'')+'>已售留板</option></select>'
+    +(LIVE?'<button class="btn sm" id="syncBtn2" onclick="syncAnchor(document.getElementById(\'syncBtn2\'))">同步最新库存</button>':'')+'</div>';
+  h+='<p class="sub" style="margin:0">主播可售看板 · '+(LIVE?'点「确认已售」回写飞书并变灰留板；误点可「恢复售卖」':'静态快照')+'</p>';
+  let shown=a;
+  if(SHOW_SOLD==='onsale')shown=shown.filter(r=>r['状态']!=='已售');
+  if(SHOW_SOLD==='sold')shown=shown.filter(r=>r['状态']==='已售');
+  if(Q){const q=Q.toLowerCase();shown=shown.filter(r=>((r['抽屉号']||'')+' '+(r['品种']||'')).toLowerCase().indexOf(q)>=0);}
+  if(!shown.length){h+='<div class="empty">没有符合条件的苗子</div>';return h;}
   h+='<div class="gallery">';
-  a.forEach(r=>{
+  shown.forEach(r=>{
     const sold=r['状态']==='已售';
     h+='<div class="card'+(sold?' sold':'')+'"><img src="'+(r.img_url?('/img?u='+encodeURIComponent(r.img_url)):'')+'" style="cursor:pointer" onclick="zoom(\''+esc(r.record_id)+'\')" onerror="this.style.background=\'#1B2230\'"><div class="b">';
     if(sold)h+='<span class="tag-sold">已售</span>';
@@ -126,6 +179,8 @@ function anchorHTML(){
   });
   h+='</div>';return h;
 }
+function setQ(v){Q=v;render();const el=document.getElementById('q');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}}
+function setSoldFilter(v){SHOW_SOLD=v;render();}
 function zoom(id){
   const r=(DATA.anchor||[]).find(x=>x.record_id===id); if(!r)return;
   const sold=r['状态']==='已售';

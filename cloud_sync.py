@@ -58,7 +58,7 @@ def ensure_sales_fields():
 
 
 def _norm_date(v):
-    """毫秒时间戳 int / ISO / 字符串 -> 显示用 'YYYY-MM-DD'。"""
+    """毫秒时间戳 int / ISO / 字符串 -> 显示用 'YYYY-MM-DD'（按北京时间 UTC+8）。"""
     if not v:
         return ""
     if isinstance(v, (int, float)):
@@ -66,9 +66,16 @@ def _norm_date(v):
         if ms < 1e12:
             ms = ms * 1000
         import datetime as _dt
-        return _dt.datetime.utcfromtimestamp(ms / 1000).strftime("%Y-%m-%d")
+        # 飞书返回 UTC 毫秒；按北京时间展示，避免凌晨时段跨日偏差
+        return (_dt.datetime.utcfromtimestamp(ms / 1000)
+                + _dt.timedelta(hours=8)).strftime("%Y-%m-%d")
     s = str(v)
     return s[:10] if "T" in s else (s[:10] if len(s) >= 10 else s)
+
+
+# 所有日期型字段统一规范化为 'YYYY-MM-DD' 字符串。
+# 注意：飞书日期字段回传的是毫秒时间戳(int)，若不在此列，前端对其做字符串操作会抛异常。
+DATE_FIELDS = ("出生日期", "租借日期", "归还日期", "收款日期", "出库", "发货")
 
 
 def _to_ms(v):
@@ -107,7 +114,7 @@ def normalize(rec):
     fld = rec.get("fields", {})
     out = {"record_id": rid}
     for k, v in fld.items():
-        if k in ("出生日期", "租借日期", "归还日期", "收款日期"):
+        if k in DATE_FIELDS:
             out[k] = _norm_date(v)
         elif isinstance(v, dict) and "text" in v:  # 单选等可能返回 {text,value}
             out[k] = v["text"]
@@ -316,6 +323,55 @@ def mark_sold(record_id):
     if row:
         f.update_record(FILE2, ANCHOR2, record_id, {"状态": "已售"})
     return {"ok": True, "anchor_record_id": record_id}
+
+
+def sell_total(record_id, fields=None):
+    """从「总台账」侧登记售出（record_id 是 FILE1 总台账的 record_id）。
+
+    旧实现误把总台账 id 传给只在主播表查找的 mark_sold()，导致静默无效。
+    这里直接写 FILE1，并联动把主播台对应记录置为「已售」（变灰留板）。
+    """
+    fields = fields or {}
+    payload = {"处置": "已售"}
+    # 出库时间：已有则不覆盖，避免重复登记时把原始出库时间改掉
+    try:
+        cur = f.get_record(FILE1, TOTAL, record_id) or {}
+        # 飞书「查询单条」返回 {"record": {...}}，兼容直接返回记录体的情况
+        rec = cur.get("record", cur) if isinstance(cur, dict) else {}
+        cur_fields = rec.get("fields", {}) if isinstance(rec, dict) else {}
+    except Exception:
+        cur_fields = {}
+    if not cur_fields.get("出库"):
+        payload["出库"] = int(time.time() * 1000)
+    if fields.get("售出价") not in (None, ""):
+        payload["售出价"] = _num(fields["售出价"])
+    for k in ("收款状态", "收货方"):
+        if fields.get(k):
+            payload[k] = fields[k]
+    if fields.get("收款日期"):
+        payload["收款日期"] = _to_ms(fields["收款日期"])
+    f.update_record(FILE1, TOTAL, record_id, payload)
+    # 联动主播台：把映射到该源记录的看板卡置为已售（保留灰卡）
+    linked = None
+    try:
+        for r in f.list_records(FILE2, ANCHOR2):
+            if r["fields"].get("源记录ID") == record_id:
+                f.update_record(FILE2, ANCHOR2, r["record_id"], {"状态": "已售"})
+                linked = r["record_id"]
+                break
+    except Exception as e:
+        print("  主播台联动失败:", e)
+    return {"ok": True, "anchor_record_id": linked}
+
+
+def set_paid(record_id, date=None):
+    """一键收款：把总台账记录标记为「已收」并写入收款日期（默认今天，北京时间）。"""
+    import datetime as _dt
+    if not date:
+        date = (_dt.datetime.utcnow() + _dt.timedelta(hours=8)).strftime("%Y-%m-%d")
+    f.update_record(FILE1, TOTAL, record_id,
+                    {"收款状态": "已收", "收款日期": _to_ms(date)})
+    return {"ok": True, "收款日期": date}
 
 
 def recover_anchor(record_id):
