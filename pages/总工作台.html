@@ -86,6 +86,10 @@ tr:nth-child(even){background:rgba(255,255,255,.025)}
 .note{color:var(--muted);font-size:12px;margin:6px 0 0;line-height:1.7}
 .kpi.money .n{font-size:21px;word-break:break-all}
 .kpi.warn .n{color:var(--coral)}
+.table-scroll{width:100%}
+.view-toggle{display:none;gap:6px;align-items:center;margin-left:auto}
+.view-toggle button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:9px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.view-toggle button.active{border-color:var(--blue);color:var(--blue);background:rgba(61,220,132,.12)}
 .kpi.warn{border-color:rgba(255,107,107,.35);box-shadow:0 2px 12px rgba(255,107,107,.12)}
 /* 手机端：底部标签栏 + 悬浮新增（桌面隐藏） */
 .tabbar{display:none}
@@ -112,31 +116,52 @@ tr:nth-child(even){background:rgba(255,255,255,.025)}
   .kpi .n{font-size:20px}
   .kpi.money .n{font-size:14px;line-height:1.25}
   .kpi .l{font-size:10px;margin-top:4px;letter-spacing:0}
-  /* 表格 -> 卡片：每行一张卡，字段名由 data-l 生成 */
-  table{border:none;background:transparent;box-shadow:none;border-radius:0}
-  thead{display:none}
-  tbody,tr,td{display:block}
-  tr{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  /* 手机端切换：默认大图卡片；紧凑模式保留表格并可左右滑动 */
+  .view-toggle{display:flex}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+  .table-scroll.compact{border:1px solid var(--line);border-radius:14px;background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  .table-scroll.compact table{min-width:900px;border:none;border-radius:0;box-shadow:none}
+  .table-scroll.compact thead{display:table-header-group}
+  .table-scroll.compact tbody{display:table-row-group}
+  .table-scroll.compact tr{display:table-row;background:transparent;border:none;border-radius:0;padding:0;margin:0;box-shadow:none}
+  .table-scroll.compact tr:nth-child(even){background:rgba(255,255,255,.025)}
+  .table-scroll.compact td{display:table-cell;border-bottom:1px solid var(--line);padding:9px 10px;font-size:12.5px;white-space:nowrap}
+  .table-scroll.compact td::before{display:none}
+  .table-scroll.compact td.imgcell,.table-scroll.compact td.act,.table-scroll.compact td.head{display:table-cell;padding:9px 10px;margin:0;border-top:none}
+  .table-scroll.compact td.imgcell{padding:9px 10px}
+  .table-scroll.compact td.imgcell .imgc{width:52px;height:52px;border-radius:10px}
+  .table-scroll.compact td.head{font-size:12.5px;color:var(--ink)}
+  .table-scroll.compact td.act{display:table-cell;white-space:normal;min-width:146px}
+  .table-scroll.compact td.act .btn{display:inline-block;min-width:0;min-height:0;padding:5px 8px;margin:2px 2px 2px 0;font-size:11px}
+  .table-scroll.compact .row-onsale{border-left:none}
+  .table-scroll.compact .row-onsale td:first-child{box-shadow:inset 3px 0 0 var(--blue)}
+  .table-scroll.compact .row-sold{opacity:.5}
+  .table-scroll.compact .row-sold td.head{text-decoration:line-through;color:var(--muted)}
+  /* 大图卡片模式 */
+  .table-scroll:not(.compact) table{border:none;background:transparent;box-shadow:none;border-radius:0}
+  .table-scroll:not(.compact) thead{display:none}
+  .table-scroll:not(.compact) tbody,.table-scroll:not(.compact) tr,.table-scroll:not(.compact) td{display:block}
+  .table-scroll:not(.compact) tr{background:var(--panel);border:1px solid var(--line);border-radius:16px;
      padding:12px 14px;margin-bottom:11px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
-  tr:nth-child(even){background:var(--panel)}
-  td{border:none;padding:4px 0;display:flex;align-items:center;gap:10px;font-size:13.5px}
-  td::before{content:attr(data-l);color:var(--muted);font-size:11px;font-weight:700;
+  .table-scroll:not(.compact) tr:nth-child(even){background:var(--panel)}
+  .table-scroll:not(.compact) td{border:none;padding:4px 0;display:flex;align-items:center;gap:10px;font-size:13.5px}
+  .table-scroll:not(.compact) td::before{content:attr(data-l);color:var(--muted);font-size:11px;font-weight:700;
      letter-spacing:.5px;flex:0 0 60px;text-align:left}
-  td.imgcell,td.act,td.head{display:block}
-  td.imgcell::before,td.act::before,td.head::before{display:none}
-  td.imgcell{padding:0 0 8px}
-  td.imgcell .imgc{width:100%;height:150px;border-radius:12px}
-  td.head{font-size:17px;font-weight:800;padding:2px 0 8px;color:var(--ink)}
-  td.act{padding-top:11px;margin-top:7px;border-top:1px solid var(--line);
+  .table-scroll:not(.compact) td.imgcell,.table-scroll:not(.compact) td.act,.table-scroll:not(.compact) td.head{display:block}
+  .table-scroll:not(.compact) td.imgcell::before,.table-scroll:not(.compact) td.act::before,.table-scroll:not(.compact) td.head::before{display:none}
+  .table-scroll:not(.compact) td.imgcell{padding:0 0 8px}
+  .table-scroll:not(.compact) td.imgcell .imgc{width:100%;height:150px;border-radius:12px}
+  .table-scroll:not(.compact) td.head{font-size:17px;font-weight:800;padding:2px 0 8px;color:var(--ink)}
+  .table-scroll:not(.compact) td.act{padding-top:11px;margin-top:7px;border-top:1px solid var(--line);
      display:flex;flex-wrap:wrap;gap:8px}
-  td.act .btn{flex:1;min-width:88px;min-height:40px;padding:9px 10px;font-size:12.5px}
-  .row-onsale td:first-child{box-shadow:none}
-  .row-onsale{border-left:3px solid var(--blue)}
-  .row-sold{opacity:.62}
-  .row-sold td:first-child,.row-sold td:nth-child(2){text-decoration:none}
-  .row-sold td.head{text-decoration:line-through;color:var(--muted)}
+  .table-scroll:not(.compact) td.act .btn{flex:1;min-width:88px;min-height:40px;padding:9px 10px;font-size:12.5px}
+  .table-scroll:not(.compact) .row-onsale td:first-child{box-shadow:none}
+  .table-scroll:not(.compact) .row-onsale{border-left:3px solid var(--blue)}
+  .table-scroll:not(.compact) .row-sold{opacity:.62}
+  .table-scroll:not(.compact) .row-sold td:first-child,.table-scroll:not(.compact) .row-sold td:nth-child(2){text-decoration:none}
+  .table-scroll:not(.compact) .row-sold td.head{text-decoration:line-through;color:var(--muted)}
   .empty{text-align:center;padding:26px 0}
-  tr.emptyrow{background:transparent;border:1px dashed var(--line);box-shadow:none}
+  tr.emptyrow{background:transparent!important;border:1px dashed var(--line)!important;box-shadow:none!important}
   /* 工具条：搜索/筛选整行铺开，便于单手点选 */
   .sales-tools{gap:8px}
   .sales-tools select,.sales-tools input{flex:1;min-width:0;font-size:16px;padding:10px}
@@ -196,6 +221,8 @@ tr:nth-child(even){background:rgba(255,255,255,.025)}
 <div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
 <script>const EMBED={"total": [{"抽屉号": "2F-A01测试111", "体重(g)": 18, "建议价格": "180-260", "性别": "公", "处置": "在售", "供货价": 80, "品种": "王蛇", "图片": {"file_token": "HOB0b9253oeoHHxUEYWcm6u7nOe", "name": "Careers4u.png", "size": 155089}, "出生日期": "2026-07-18", "record_id": "2F-A01测试111"}, {"抽屉号": "2F-A02", "体重(g)": 21, "建议价格": "180-260", "性别": "母", "处置": "在售", "供货价": 80, "品种": "玉米", "出生日期": "2026-07-14", "record_id": "2F-A02"}, {"抽屉号": "2F-A03", "体重(g)": 45, "建议价格": "380-450", "性别": "公", "处置": "在售", "供货价": 120, "品种": "牛蛇", "出生日期": "2026-07-01", "record_id": "2F-A03"}, {"抽屉号": "2F-A05", "体重(g)": 40, "建议价格": "420-520", "性别": "母", "处置": "在售", "供货价": 150, "品种": "猪鼻", "出生日期": "2026-06-26", "record_id": "2F-A05"}, {"抽屉号": "2F-A07", "体重(g)": 24, "建议价格": "180", "性别": "母", "处置": "自留", "供货价": 80, "品种": "玉米", "出生日期": "2026-06-20", "record_id": "2F-A07"}, {"抽屉号": "2F-A09", "发货": "2026-08-15T14:10:00.000+08:00", "体重(g)": 42, "建议价格": "380", "性别": "母", "处置": "在售", "供货价": 120, "品种": "牛蛇", "出库": "2026-08-16T13:58:22.000+08:00", "出生日期": "2026-07-06", "record_id": "2F-A09"}, {"抽屉号": "测试", "体重(g)": 50, "建议价格": "333", "性别": "公", "处置": "在售", "供货价": 111111, "品种": "牛蛇", "图片": {"file_token": "K2VdbyqjhoryauxBI2LcP2hznVf", "name": "微信图片_20260227100718_2194_83.jpg", "size": 1520775}, "出生日期": "2026-08-13", "record_id": "测试"}, {"record_id": null}], "loan": [{"抽屉号": "2F-C05", "出生日期": "2026-06-30", "租借日期": "2026-08-14", "租借方": "蛇友老王", "状态": "在借", "体重(g)": 23, "备注": "展示用，归还时查体外寄生虫", "性别": "公", "品种": "玉米", "归还日期": "2026-08-21", "record_id": "2F-C05"}, {"抽屉号": "2F-C06", "出生日期": "2026-05-20", "租借日期": "2026-08-10", "租借方": "爬宠展A", "状态": "已逾期", "体重(g)": 60, "备注": "展会延期，已催归还", "性别": "母", "品种": "牛蛇", "归还日期": "2026-08-16", "record_id": "2F-C06"}, {"抽屉号": "2F-C07", "出生日期": "2026-04-15", "租借日期": "2026-07-01", "租借方": "科普馆", "状态": "已归还", "体重(g)": 55, "备注": "已回，健康无异常", "性别": "公", "品种": "猪鼻王蛇", "归还日期": "2026-08-01", "record_id": "2F-C07"}], "anchor": [{"抽屉号": "2F-A02", "源记录ID": "recvslxdL43Dri", "品种": "玉米", "建议价格": "180-260", "供货价": 80, "体重(g)": 21, "性别": "母", "状态": "在售", "出生日期": "2026-07-14", "record_id": "recvslxdL43Dri"}, {"抽屉号": "2F-A03", "源记录ID": "recvslxdL4c3bN", "品种": "牛蛇", "建议价格": "380-450", "供货价": 120, "体重(g)": 45, "性别": "公", "状态": "在售", "出生日期": "2026-07-01", "record_id": "recvslxdL4c3bN"}, {"抽屉号": "2F-A05", "源记录ID": "recvslxdL4apdB", "品种": "猪鼻", "建议价格": "420-520", "供货价": 150, "体重(g)": 40, "性别": "母", "状态": "在售", "出生日期": "2026-06-26", "record_id": "recvslxdL4apdB"}, {"抽屉号": "2F-A01测试111", "源记录ID": "recvslxdL4jUVK", "品种": "王蛇", "图片": {"file_token": "B0eNb19wTo1OtRxgYcicANCwnMg", "name": "recvslxdL4jUVK_Careers4u.png", "size": 155089}, "建议价格": "180-260", "供货价": 80, "体重(g)": 18, "性别": "公", "状态": "在售", "出生日期": "2026-07-18", "record_id": "recvslxdL4jUVK"}, {"抽屉号": "测试", "源记录ID": "recvsqRheVT4Uo", "品种": "牛蛇", "图片": {"file_token": "ErsMb9kgGouPR0x2WgQc4grhnfc", "name": "recvsqRheVT4Uo_微信图片_20260227100718_2194_83.jpg", "size": 1520775}, "建议价格": "333", "供货价": 111111, "体重(g)": 50, "性别": "公", "状态": "在售", "出生日期": "2026-08-13", "record_id": "recvsqRheVT4Uo"}, {"抽屉号": "2F-A09", "源记录ID": "recvslxdL4Z6pa", "品种": "牛蛇", "建议价格": "380", "供货价": 120, "体重(g)": 42, "性别": "母", "状态": "在售", "出生日期": "2026-07-06", "record_id": "recvslxdL4Z6pa"}], "updated_at": "2026-08-16 14:43"};const ROLE="admin";
 let DATA=null,LIVE=false,EDITING=null,LEDIT=null,CURVIEW='total',SALE_MONTH='',SELLING=null,Q='',FDISP='';
+// 每台设备单独记住自己最后一次选择：card=大图卡片，compact=紧凑表格
+let PHONE_VIEW=localStorage.getItem('yq_phone_view')||'card';
 async function boot(){
   try{const r=await fetch('/api/data');if(r.ok){DATA=await r.json();LIVE=true;}}catch(e){}
   if(!DATA){DATA=EMBED;LIVE=false;
@@ -255,6 +282,9 @@ function syncFab(){
 function fabAction(){if(CURVIEW==='loan')openLoan();else openEdit();}
 function kpi(n,l){return '<div class="kpi"><div class="n serif">'+n+'</div><div class="l">'+l+'</div></div>';}
 function kpiM(n,l,warn){return '<div class="kpi money'+(warn?' warn':'')+'"><div class="n serif">'+n+'</div><div class="l">'+l+'</div></div>';}
+function phoneViewToggle(){return '<div class="view-toggle" aria-label="手机查看方式"><button class="'+(PHONE_VIEW==='compact'?'active':'')+'" onclick="setPhoneView(\'compact\')">▤ 紧凑表</button><button class="'+(PHONE_VIEW==='card'?'active':'')+'" onclick="setPhoneView(\'card\')">▧ 大图卡</button></div>';}
+function tableWrap(html){return '<div class="table-scroll '+(PHONE_VIEW==='compact'?'compact':'')+'">'+html+'</div>';}
+function setPhoneView(v){PHONE_VIEW=v;localStorage.setItem('yq_phone_view',v);render();}
 // 日期兜底：飞书日期字段可能回传毫秒时间戳，统一成 'YYYY-MM-DD' 字符串再做字符串操作
 function fmtDate(v){
   if(v==null||v==='')return '';
@@ -277,17 +307,17 @@ function totalView(){
   const self=t.filter(r=>r['处置']==='自留').length;
   const loanAct=l.filter(r=>r['状态']==='租借中'||r['状态']==='在借').length;
   let h='<div class="kpis">'+kpi(onsale,'在售苗子')+kpi(sold,'已售')+kpi(self,'自留')+kpi(t.length,'总台账')+kpi(loanAct,'租借中')+kpi(a.length,'主播在售')+'</div>';
-  h+='<div class="sect"><span class="dia">◆</span><h2>总台账</h2>'+(LIVE?'<button class="btn blood sm" style="margin-left:auto" onclick="openEdit()">+ 新增苗子</button>':'')+'</div>';
+  h+='<div class="sect"><span class="dia">◆</span><h2>总台账</h2>'+phoneViewToggle()+(LIVE?'<button class="btn blood sm" onclick="openEdit()">+ 新增苗子</button>':'')+'</div>';
   h+='<div class="sales-tools"><input id="q" placeholder="搜索 抽屉号 / 品种" value="'+esc(Q)+'" oninput="setQ(this.value)">'
     +'<select onchange="setDisp(this.value)">'+['','在售','已售','自留'].map(o=>'<option value="'+o+'" '+(o===FDISP?'selected':'')+'>'+(o||'全部处置')+'</option>').join('')+'</select></div>';
   let rows=t;
   if(FDISP)rows=rows.filter(r=>r['处置']===FDISP);
   if(Q){const q=Q.toLowerCase();rows=rows.filter(r=>((r['抽屉号']||'')+' '+(r['品种']||'')).toLowerCase().indexOf(q)>=0);}
   h+='<p class="note">显示 '+rows.length+' / '+t.length+' 条'+((Q||FDISP)?' · 已筛选':'')+'</p>';
-  h+='<table><thead><tr><th>图</th><th>抽屉号</th><th>品种</th><th>性别</th><th>出生</th><th>体重(g)</th><th>供货价</th><th>建议价</th><th>处置</th><th>出库</th><th>操作</th></tr></thead><tbody>';
-  if(!rows.length)h+='<tr class="emptyrow"><td colspan="11" class="empty">没有符合条件的记录</td></tr>';
+  let table='<table><thead><tr><th>图</th><th>抽屉号</th><th>品种</th><th>性别</th><th>出生</th><th>体重(g)</th><th>供货价</th><th>建议价</th><th>处置</th><th>出库</th><th>操作</th></tr></thead><tbody>';
+  if(!rows.length)table+='<tr class="emptyrow"><td colspan="11" class="empty">没有符合条件的记录</td></tr>';
   rows.forEach(r=>{const cls=r['处置']==='在售'?'row-onsale':(r['处置']==='已售'?'row-sold':'');
-    h+='<tr class="'+cls+'">'
+    table+='<tr class="'+cls+'">'
       +'<td class="imgcell">'+img(r)+'</td>'
       +'<td class="head serif" data-l="抽屉号">'+esc(r['抽屉号'])+'</td>'
       +'<td data-l="品种">'+esc(r['品种'])+'</td>'
@@ -299,7 +329,8 @@ function totalView(){
       +'<td data-l="处置">'+statusTag(r['处置'])+'</td>'
       +'<td data-l="出库">'+esc(fmtDate(r['出库'])||'—')+'</td>'
       +'<td class="act">'+actions(r)+'</td></tr>';});
-  h+='</tbody></table>';
+  table+='</tbody></table>';
+  h+=tableWrap(table);
   h+='<div class="sect"><span class="dia">◆</span><h2>主播看板</h2><a class="btn ghost sm" href="/anchor">打开主播台 →</a>'+(LIVE?'<button class="btn sm" id="syncBtn" onclick="syncAnchor(document.getElementById(\'syncBtn\'))">立即同步</button>':'')+'</div>';
   h+='<p class="note">当前主播看板在售 '+a.length+' 条。'+(LIVE?'总台账改动每 5 分钟自动同步到主播台，也可点上面按钮立刻同步。':'（静态快照）')+'</p>';
   return h;
@@ -359,18 +390,18 @@ function salesView(){
     +kpiM(yuan(st.cost),'总供货价')+kpiM(yuan(st.sold),'总售出价')
     +kpiM(yuan(st.profit),'总利润')+kpiM(yuan(st.recv),'已收回')
     +kpiM(yuan(st.unrecv),'应收未收',true)+'</div>';
-  let h='<div class="sect"><span class="dia">◆</span><h2>销售收款情况</h2></div>'+sel+cards;
+  let h='<div class="sect"><span class="dia">◆</span><h2>销售收款情况</h2>'+phoneViewToggle()+'</div>'+sel+cards;
   h+='<p class="note">应收未收 = 收款状态不是「已收」的售出价合计，即还要收回来的钱。选月份可逐月核算，选「全部」即叠加统计。导出的 CSV 可直接用 Excel 打开发给收货方。</p>';
   if(st.missing)h+='<p class="note" style="color:var(--coral)">⚠ 有 '+st.missing+' 条已售记录还没填售出价，点该行「编辑」补上后统计才准确。</p>';
-  h+='<table><thead><tr><th>图</th><th>抽屉号</th><th>品种</th><th>性别</th><th>供货价</th><th>售出价</th><th>利润</th><th>收货方</th><th>收款状态</th><th>收款日期</th><th>操作</th></tr></thead><tbody>';
-  if(!rows.length)h+='<tr class="emptyrow"><td colspan="11" class="empty">暂无已售记录（在总台账点「标记已售」后会出现在这里）</td></tr>';
+  let table='<table><thead><tr><th>图</th><th>抽屉号</th><th>品种</th><th>性别</th><th>供货价</th><th>售出价</th><th>利润</th><th>收货方</th><th>收款状态</th><th>收款日期</th><th>操作</th></tr></thead><tbody>';
+  if(!rows.length)table+='<tr class="emptyrow"><td colspan="11" class="empty">暂无已售记录（在总台账点「标记已售」后会出现在这里）</td></tr>';
   rows.forEach(r=>{const c=_n(r['供货价']),s=_n(r['售出价']),p=s>0?(s-c):null;
     let act='<span class="sub">只读</span>';
     if(LIVE){
       act='<button class="btn sm" onclick="openEdit(\''+esc(r.record_id)+'\')">编辑</button>';
       if(r['收款状态']!=='已收')act+='<button class="btn ok sm" onclick="quickPaid(\''+esc(r.record_id)+'\')">一键收款</button>';
     }
-    h+='<tr>'
+    table+='<tr>'
       +'<td class="imgcell">'+img(r)+'</td>'
       +'<td class="head serif" data-l="抽屉号">'+esc(r['抽屉号'])+'</td>'
       +'<td data-l="品种">'+esc(r['品种'])+'</td>'
@@ -382,7 +413,8 @@ function salesView(){
       +'<td data-l="收款">'+rstatusTag(r['收款状态'])+'</td>'
       +'<td data-l="收款日">'+esc(fmtDate(r['收款日期'])||'—')+'</td>'
       +'<td class="act">'+act+'</td></tr>';});
-  h+='</tbody></table>';
+  table+='</tbody></table>';
+  h+=tableWrap(table);
   return h;
 }
 function setSaleMonth(v){SALE_MONTH=v;render();}
