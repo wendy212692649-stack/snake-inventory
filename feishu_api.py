@@ -97,6 +97,32 @@ def list_records(app_token, table_id, page_size=100):
     return out
 
 
+def _url_base(app_token, table_id):
+    return f"{BASE}/bitable/v1/apps/{app_token}/tables/{table_id}"
+
+
+def list_fields(app_token, table_id):
+    """列出多维表格的所有字段（含 field_name / type / property），用于探测现有结构、做幂等建字段。"""
+    r = requests.get(_url_base(app_token, table_id) + "/fields", headers=_hdr(), timeout=20)
+    d = r.json()
+    if d.get("code") != 0:
+        raise RuntimeError("读取字段失败: %s" % d)
+    return d["data"].get("items", [])
+
+
+def create_field(app_token, table_id, name, ftype, property=None):
+    """在多维表格新建一个字段。ftype 为飞书字段类型字符串（如 'number'/'text'/'single_select'/'date'）。"""
+    body = {"field_name": name, "type": ftype}
+    if property is not None:
+        body["property"] = property
+    r = requests.post(_url_base(app_token, table_id) + "/fields", headers=_hdr(),
+                      json=body, timeout=20)
+    d = r.json()
+    if d.get("code") != 0:
+        raise RuntimeError("创建字段失败(%s): %s" % (name, d))
+    return d["data"]
+
+
 def get_record(app_token, table_id, record_id):
     r = requests.get(_url(app_token, table_id, "/" + record_id), headers=_hdr(), timeout=20)
     d = r.json()

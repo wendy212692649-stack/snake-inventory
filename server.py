@@ -20,6 +20,12 @@ CACHE_FILE = os.path.join(CACHE_DIR, "api_data.json")
 CACHE_TTL = 120  # 秒：文件级缓存，避免每次刷新都重拉飞书（写入后自动失效）
 import cloud_sync as cs
 
+# 启动即确保总台账含销售收款字段（幂等：已存在则跳过，失败不影响主流程）
+try:
+    cs.ensure_sales_fields()
+except Exception as e:
+    print("ensure_sales_fields failed at startup:", e)
+
 app = Flask(__name__, static_folder=HTML_DIR, static_url_path="")
 
 

@@ -67,6 +67,19 @@ tr:nth-child(even){background:rgba(255,255,255,.025)}
 .row2{display:flex;gap:10px}.row2>*{flex:1}
 .mfoot{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
 .empty{color:var(--muted);font-style:italic;padding:20px 0}
+.layout{display:flex;gap:0;align-items:flex-start;margin-top:8px}
+.side{width:172px;flex:none;position:sticky;top:8px;background:#0B0E13;border:1px solid var(--line);border-radius:16px;padding:10px;align-self:flex-start}
+.side .sl{font-size:10px;color:var(--muted);letter-spacing:1px;margin:4px 8px 8px}
+.side a{display:block;color:var(--muted);text-decoration:none;padding:11px 13px;font-size:13px;font-weight:700;letter-spacing:.5px;border-radius:11px;margin-bottom:5px;border:1px solid transparent}
+.side a:hover{color:var(--ink);background:rgba(255,255,255,.03)}
+.side a.active{background:rgba(61,220,132,.14);color:var(--blue);border-color:rgba(61,220,132,.35);box-shadow:inset 2px 0 0 var(--blue)}
+.main{flex:1;min-width:0;padding-left:18px}
+.sales-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.sales-tools select{background:var(--panel2);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px}
+.tag.unpaid{color:var(--coral);border-color:rgba(255,107,107,.5);background:rgba(255,107,107,.12)}
+.tag.part{color:#FFB454;border-color:rgba(255,180,84,.5);background:rgba(255,180,84,.12)}
+.tag.paid{color:var(--blue);border-color:var(--blue);background:rgba(61,220,132,.12)}
+.note{color:var(--muted);font-size:12px;margin:6px 0 0;line-height:1.7}
 </style></head>
 <body>
 <nav>
@@ -76,11 +89,11 @@ tr:nth-child(even){background:rgba(255,255,255,.025)}
 <header><h1>变温领地</h1><div class="sub">阿清私有 · 全量台账 / 租借 / 主播看板</div></header>
 <div class="wrap">
 <div class="banner" id="banner"></div>
-<div id="app"></div>
+<div class="layout"><nav class="side" id="side"></nav><div class="main" id="main"></div></div>
 </div>
 <div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
 <script>const EMBED={"total": [{"抽屉号": "2F-A01测试111", "体重(g)": 18, "建议价格": "180-260", "性别": "公", "处置": "在售", "供货价": 80, "品种": "王蛇", "图片": {"file_token": "HOB0b9253oeoHHxUEYWcm6u7nOe", "name": "Careers4u.png", "size": 155089}, "出生日期": "2026-07-18", "record_id": "2F-A01测试111"}, {"抽屉号": "2F-A02", "体重(g)": 21, "建议价格": "180-260", "性别": "母", "处置": "在售", "供货价": 80, "品种": "玉米", "出生日期": "2026-07-14", "record_id": "2F-A02"}, {"抽屉号": "2F-A03", "体重(g)": 45, "建议价格": "380-450", "性别": "公", "处置": "在售", "供货价": 120, "品种": "牛蛇", "出生日期": "2026-07-01", "record_id": "2F-A03"}, {"抽屉号": "2F-A05", "体重(g)": 40, "建议价格": "420-520", "性别": "母", "处置": "在售", "供货价": 150, "品种": "猪鼻", "出生日期": "2026-06-26", "record_id": "2F-A05"}, {"抽屉号": "2F-A07", "体重(g)": 24, "建议价格": "180", "性别": "母", "处置": "自留", "供货价": 80, "品种": "玉米", "出生日期": "2026-06-20", "record_id": "2F-A07"}, {"抽屉号": "2F-A09", "发货": "2026-08-15T14:10:00.000+08:00", "体重(g)": 42, "建议价格": "380", "性别": "母", "处置": "在售", "供货价": 120, "品种": "牛蛇", "出库": "2026-08-16T13:58:22.000+08:00", "出生日期": "2026-07-06", "record_id": "2F-A09"}, {"抽屉号": "测试", "体重(g)": 50, "建议价格": "333", "性别": "公", "处置": "在售", "供货价": 111111, "品种": "牛蛇", "图片": {"file_token": "K2VdbyqjhoryauxBI2LcP2hznVf", "name": "微信图片_20260227100718_2194_83.jpg", "size": 1520775}, "出生日期": "2026-08-13", "record_id": "测试"}, {"record_id": null}], "loan": [{"抽屉号": "2F-C05", "出生日期": "2026-06-30", "租借日期": "2026-08-14", "租借方": "蛇友老王", "状态": "在借", "体重(g)": 23, "备注": "展示用，归还时查体外寄生虫", "性别": "公", "品种": "玉米", "归还日期": "2026-08-21", "record_id": "2F-C05"}, {"抽屉号": "2F-C06", "出生日期": "2026-05-20", "租借日期": "2026-08-10", "租借方": "爬宠展A", "状态": "已逾期", "体重(g)": 60, "备注": "展会延期，已催归还", "性别": "母", "品种": "牛蛇", "归还日期": "2026-08-16", "record_id": "2F-C06"}, {"抽屉号": "2F-C07", "出生日期": "2026-04-15", "租借日期": "2026-07-01", "租借方": "科普馆", "状态": "已归还", "体重(g)": 55, "备注": "已回，健康无异常", "性别": "公", "品种": "猪鼻王蛇", "归还日期": "2026-08-01", "record_id": "2F-C07"}], "anchor": [{"抽屉号": "2F-A02", "源记录ID": "recvslxdL43Dri", "品种": "玉米", "建议价格": "180-260", "供货价": 80, "体重(g)": 21, "性别": "母", "状态": "在售", "出生日期": "2026-07-14", "record_id": "recvslxdL43Dri"}, {"抽屉号": "2F-A03", "源记录ID": "recvslxdL4c3bN", "品种": "牛蛇", "建议价格": "380-450", "供货价": 120, "体重(g)": 45, "性别": "公", "状态": "在售", "出生日期": "2026-07-01", "record_id": "recvslxdL4c3bN"}, {"抽屉号": "2F-A05", "源记录ID": "recvslxdL4apdB", "品种": "猪鼻", "建议价格": "420-520", "供货价": 150, "体重(g)": 40, "性别": "母", "状态": "在售", "出生日期": "2026-06-26", "record_id": "recvslxdL4apdB"}, {"抽屉号": "2F-A01测试111", "源记录ID": "recvslxdL4jUVK", "品种": "王蛇", "图片": {"file_token": "B0eNb19wTo1OtRxgYcicANCwnMg", "name": "recvslxdL4jUVK_Careers4u.png", "size": 155089}, "建议价格": "180-260", "供货价": 80, "体重(g)": 18, "性别": "公", "状态": "在售", "出生日期": "2026-07-18", "record_id": "recvslxdL4jUVK"}, {"抽屉号": "测试", "源记录ID": "recvsqRheVT4Uo", "品种": "牛蛇", "图片": {"file_token": "ErsMb9kgGouPR0x2WgQc4grhnfc", "name": "recvsqRheVT4Uo_微信图片_20260227100718_2194_83.jpg", "size": 1520775}, "建议价格": "333", "供货价": 111111, "体重(g)": 50, "性别": "公", "状态": "在售", "出生日期": "2026-08-13", "record_id": "recvsqRheVT4Uo"}, {"抽屉号": "2F-A09", "源记录ID": "recvslxdL4Z6pa", "品种": "牛蛇", "建议价格": "380", "供货价": 120, "体重(g)": 42, "性别": "母", "状态": "在售", "出生日期": "2026-07-06", "record_id": "recvslxdL4Z6pa"}], "updated_at": "2026-08-16 14:43"};const ROLE="admin";
-let DATA=null,LIVE=false,EDITING=null,LEDIT=null;
+let DATA=null,LIVE=false,EDITING=null,LEDIT=null,CURVIEW='total',SALE_MONTH='';
 async function boot(){
   try{const r=await fetch('/api/data');if(r.ok){DATA=await r.json();LIVE=true;}}catch(e){}
   if(!DATA){DATA=EMBED;LIVE=false;
@@ -113,29 +126,86 @@ function img(r){return r.img_url?('<img class="imgc" src="/img?u='+encodeURIComp
 function statusTag(d){const m={在售:'onsale',已售:'sold',自留:'self'};const c=m[d]||'';return '<span class="tag '+c+'">'+esc(d||'—')+'</span>';}
 function price(r){let p=r['建议价格'];return p?('¥'+esc(p)):'—';}
 function opts(arr,sel){return arr.map(o=>('<option '+(o===sel?'selected':'')+'>'+o+'</option>')).join('');}
-function render(){const app=document.getElementById('app');app.innerHTML=(ROLE==='admin')?adminHTML():anchorHTML();bind();}
+function render(){
+  document.getElementById('side').innerHTML=sideHTML();
+  document.getElementById('main').innerHTML=mainHTML();
+  bind();
+}
+function sideHTML(){
+  const items=[['total','◆ 总台账'],['loan','◆ 租借台账'],['sales','◆ 销售收款情况']];
+  return '<div class="sl">阿清台账</div>'+items.map(it=>'<a href="javascript:void(0)" class="'+(CURVIEW===it[0]?'active':'')+'" onclick="switchView(\''+it[0]+'\')">'+it[1]+'</a>').join('');
+}
+function switchView(v){CURVIEW=v;render();}
 function kpi(n,l){return '<div class="kpi"><div class="n serif">'+n+'</div><div class="l">'+l+'</div></div>';}
-function adminHTML(){
+function mainHTML(){
+  if(CURVIEW==='loan')return loanView();
+  if(CURVIEW==='sales')return salesView();
+  return totalView();
+}
+function totalView(){
   const t=DATA.total||[],l=DATA.loan||[],a=DATA.anchor||[];
   const onsale=t.filter(r=>r['处置']==='在售').length;
   const sold=t.filter(r=>r['处置']==='已售').length;
   const self=t.filter(r=>r['处置']==='自留').length;
   const loanAct=l.filter(r=>r['状态']==='租借中').length;
   let h='<div class="kpis">'+kpi(onsale,'在售苗子')+kpi(sold,'已售')+kpi(self,'自留')+kpi(t.length,'总台账')+kpi(loanAct,'租借中')+kpi(a.length,'主播看板在售')+'</div>';
-  h+='<div class="sect"><span class="dia">◆</span><h2>总台账</h2>'+(LIVE?'<button class="btn blood sm" style="margin-left:auto" onclick="openEdit()">+ 新增苗子</button>':'')+'</div>';
+  h+='<div class="sect"><span class="dia">◆</span><h2>总台账（当前全部情况）</h2>'+(LIVE?'<button class="btn blood sm" style="margin-left:auto" onclick="openEdit()">+ 新增苗子</button>':'')+'</div>';
   h+='<table><thead><tr><th>图</th><th>抽屉号</th><th>品种</th><th>性别</th><th>出生</th><th>体重(g)</th><th>供货价</th><th>建议价</th><th>处置</th><th>出库</th><th>操作</th></tr></thead><tbody>';
   if(!t.length)h+='<tr><td colspan="11" class="empty">暂无记录</td></tr>';
   t.forEach(r=>{const cls=r['处置']==='在售'?'row-onsale':(r['处置']==='已售'?'row-sold':'');
-    h+='<tr class="'+cls+'" data-id="'+esc(r.record_id)+'"><td>'+img(r)+'</td><td class="serif">'+esc(r['抽屉号'])+'</td><td>'+esc(r['品种'])+'</td><td>'+esc(r['性别'])+'</td><td>'+esc(r['出生日期'])+'</td><td>'+esc(r['体重(g)'])+'</td><td>'+esc(r['供货价'])+'</td><td>'+price(r)+'</td><td>'+statusTag(r['处置'])+'</td><td>'+esc(r['出库']||'')+'</td><td>'+actions(r)+'</td></tr>';});
-  h+='</tbody></table>';
-  h+='<div class="sect"><span class="dia">◆</span><h2>租借台账</h2>'+(LIVE?'<button class="btn blood sm" style="margin-left:auto" onclick="openLoan()">+ 新增租借</button>':'')+'</div>';
-  h+='<table><thead><tr><th>抽屉号</th><th>品种</th><th>性别</th><th>租借方</th><th>租借日期</th><th>归还日期</th><th>状态</th><th>备注</th></tr></thead><tbody>';
-  if(!l.length)h+='<tr><td colspan="8" class="empty">暂无租借</td></tr>';
-  l.forEach(r=>{h+='<tr data-lid="'+esc(r.record_id)+'"><td class="serif">'+esc(r['抽屉号'])+'</td><td>'+esc(r['品种'])+'</td><td>'+esc(r['性别'])+'</td><td>'+esc(r['租借方'])+'</td><td>'+esc(r['租借日期'])+'</td><td>'+esc(r['归还日期'])+'</td><td>'+statusTag(r['状态'])+'</td><td>'+esc(r['备注'])+'</td></tr>';});
+    h+='<tr class="'+cls+'"><td>'+img(r)+'</td><td class="serif">'+esc(r['抽屉号'])+'</td><td>'+esc(r['品种'])+'</td><td>'+esc(r['性别'])+'</td><td>'+esc(r['出生日期'])+'</td><td>'+esc(r['体重(g)'])+'</td><td>'+esc(r['供货价'])+'</td><td>'+price(r)+'</td><td>'+statusTag(r['处置'])+'</td><td>'+esc(r['出库']||'')+'</td><td>'+actions(r)+'</td></tr>';});
   h+='</tbody></table>';
   h+='<div class="sect"><span class="dia">◆</span><h2>主播看板（实时）</h2><a class="btn ghost sm" href="'+navOther()+'">打开主播工作台 →</a>'+(LIVE?'<button class="btn sm" id="syncBtn" style="margin-left:8px" onclick="syncAnchor(document.getElementById(\'syncBtn\'))">立即同步到主播台</button>':'')+'</div>';
   h+='<p class="sub">当前主播看板在售 '+a.length+' 条。'+(LIVE?'网页改动会自动同步到飞书文件2。':'（静态快照）')+'</p>';
   return h;
+}
+function loanView(){
+  const l=DATA.loan||[];
+  let h='<div class="sect"><span class="dia">◆</span><h2>租借台账</h2>'+(LIVE?'<button class="btn blood sm" style="margin-left:auto" onclick="openLoan()">+ 新增租借</button>':'')+'</div>';
+  h+='<table><thead><tr><th>抽屉号</th><th>品种</th><th>性别</th><th>租借方</th><th>租借日期</th><th>归还日期</th><th>状态</th><th>备注</th></tr></thead><tbody>';
+  if(!l.length)h+='<tr><td colspan="8" class="empty">暂无租借</td></tr>';
+  l.forEach(r=>{h+='<tr data-lid="'+esc(r.record_id)+'"><td class="serif">'+esc(r['抽屉号'])+'</td><td>'+esc(r['品种'])+'</td><td>'+esc(r['性别'])+'</td><td>'+esc(r['租借方'])+'</td><td>'+esc(r['租借日期'])+'</td><td>'+esc(r['归还日期'])+'</td><td>'+statusTag(r['状态'])+'</td><td>'+esc(r['备注'])+'</td></tr>';});
+  h+='</tbody></table>';
+  h+='<p class="sub">租借中的苗子仍计入总台账「在售」。</p>';
+  return h;
+}
+function _n(v){const x=parseFloat(v);return isNaN(x)?0:x;}
+function yuan(n){return '¥'+_n(n).toLocaleString('zh-CN',{minimumFractionDigits:0,maximumFractionDigits:2});}
+function soldList(){return (DATA.total||[]).filter(r=>r['处置']==='已售');}
+function monthKey(r){let mk=(r['收款日期']||'').slice(0,7);if(!mk)mk=(r['出库']||'').slice(0,7);return mk;}
+function computeStats(rows){let cost=0,sold=0,recv=0,unrecv=0;rows.forEach(r=>{const c=_n(r['供货价']),s=_n(r['售出价']);cost+=c;sold+=s;if(r['收款状态']==='已收')recv+=s;else unrecv+=s;});return {cost:cost,sold:sold,profit:sold-cost,recv:recv,unrecv:unrecv,count:rows.length};}
+function rstatusTag(s){const m={'未收':'unpaid','部分收':'part','已收':'paid'};const c=m[s]||'';return '<span class="tag '+c+'">'+(s||'未填')+'</span>';}
+function salesView(){
+  const all=soldList();
+  const months=[...new Set(all.map(monthKey).filter(Boolean))].sort().reverse();
+  const rows=SALE_MONTH?all.filter(r=>monthKey(r)===SALE_MONTH):all;
+  const st=computeStats(rows);
+  let sel='<div class="sales-tools"><label class="sub" style="margin:0">月份核算</label><select id="smonth" onchange="setSaleMonth(this.value)"><option value="">全部（叠加统计）</option>'+months.map(m=>'<option value="'+m+'" '+(m===SALE_MONTH?'selected':'')+'>'+m+'</option>').join('')+'</select><button class="btn" onclick="exportSales()">导出 CSV（给收货方）</button></div>';
+  let cards='<div class="kpis">'+kpi(rows.length,'已售笔数')+kpi(yuan(st.cost),'总供货价')+kpi(yuan(st.sold),'总售出价')+kpi(yuan(st.profit),'总利润')+kpi(yuan(st.recv),'已收回')+kpi(yuan(st.unrecv),'应收未收')+'</div>';
+  let h='<div class="sect"><span class="dia">◆</span><h2>销售收款情况</h2></div>'+sel+cards;
+  h+='<p class="note">应收未收 = 收款状态不是「已收」的售出价合计，即阿清还要收回来的钱。点月份可逐月核算，选「全部」即叠加统计。导出 CSV 可直接用 Excel 打开、发给收货方（含图片链接）。</p>';
+  h+='<table><thead><tr><th>图</th><th>抽屉号</th><th>品种</th><th>性别</th><th>供货价</th><th>售出价</th><th>利润</th><th>收货方</th><th>收款状态</th><th>收款日期</th><th>操作</th></tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td colspan="11" class="empty">暂无已售记录（在总台账把苗子「标记已售」后会出现在这里）</td></tr>';
+  rows.forEach(r=>{const c=_n(r['供货价']),s=_n(r['售出价']),p=s>0?(s-c):null;
+    h+='<tr><td>'+img(r)+'</td><td class="serif">'+esc(r['抽屉号'])+'</td><td>'+esc(r['品种'])+'</td><td>'+esc(r['性别'])+'</td><td>'+yuan(c)+'</td><td>'+yuan(s)+'</td><td>'+(p===null?'—':yuan(p))+'</td><td>'+esc(r['收货方']||'—')+'</td><td>'+rstatusTag(r['收款状态'])+'</td><td>'+esc(r['收款日期']||'—')+'</td><td>'+(LIVE?'<button class="btn sm" onclick="openEdit(\''+esc(r.record_id)+'\')">编辑</button>':'<span class="sub">只读</span>')+'</td></tr>';});
+  h+='</tbody></table>';
+  return h;
+}
+function setSaleMonth(v){SALE_MONTH=v;render();}
+function csvCell(v){v=String(v==null?'':v);if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
+function exportSales(){
+  const all=soldList();
+  const rows=SALE_MONTH?all.filter(r=>monthKey(r)===SALE_MONTH):all;
+  if(!rows.length){alert('没有可导出的已售记录');return;}
+  const head=['品种','性别','抽屉号','供货价','售出价','利润','收货方','收款状态','收款日期','图片'];
+  const lines=[head.join(',')];
+  rows.forEach(r=>{const c=_n(r['供货价']),s=_n(r['售出价']),p=s>0?(s-c):'';
+    const row=[r['品种']||'',r['性别']||'',r['抽屉号']||'',c,s,p,r['收货方']||'',r['收款状态']||'',r['收款日期']||'',r.img_url||''];
+    lines.push(row.map(csvCell).join(','));});
+  const csv='\ufeff'+lines.join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='销售收款'+(SALE_MONTH?('_'+SALE_MONTH):'_全部')+'.csv';a.click();
 }
 function actions(r){
   if(!LIVE)return '<span class="sub">只读</span>';
@@ -161,6 +231,9 @@ function openEdit(id){
    '<div class="row2"><div class="fld"><label>性别</label><select id="f_gd">'+opts(['公','母'],v('性别'))+'</select></div><div class="fld"><label>处置</label><select id="f_dp">'+opts(['在售','自留','已售'],v('处置')||'在售')+'</select></div></div>'+
    '<div class="row2"><div class="fld"><label>出生日期</label><input id="f_bd" type="date" value="'+v('出生日期')+'"></div><div class="fld"><label>体重(g)</label><input id="f_wt" type="number" value="'+v('体重(g)')+'"></div></div>'+
    '<div class="row2"><div class="fld"><label>供货价</label><input id="f_sp2" type="number" value="'+v('供货价')+'"></div><div class="fld"><label>建议价格</label><input id="f_pr" value="'+v('建议价格')+'"></div></div>'+
+   '<div class="fld"><label style="color:var(--blue)">销售与收款（标记已售后填写）</label></div>'+
+   '<div class="row2"><div class="fld"><label>售出价</label><input id="f_sprice" type="number" step="0.01" value="'+v('售出价')+'"></div><div class="fld"><label>收款状态</label><select id="f_rstatus">'+opts(['','未收','部分收','已收'],v('收款状态'))+'</select></div></div>'+
+   '<div class="row2"><div class="fld"><label>收货方</label><input id="f_party" value="'+v('收货方')+'"></div><div class="fld"><label>收款日期</label><input id="f_pdate" type="date" value="'+v('收款日期')+'"></div></div>'+
    '<div class="fld"><label>照片（可选）</label><input id="f_img" type="file" accept="image/*" onchange="previewImg(this)"><div id="imgprev" style="margin-top:8px">'+(r&&r.img_url?('<img src="/img?u='+encodeURIComponent(r.img_url)+'" style="max-width:120px;border-radius:10px;border:1px solid var(--line)">'):'')+'</div><div class="sub" style="margin-top:4px">不选则保留原图（编辑时）/ 不添加（新增时）</div></div>'+
    '<div class="mfoot"><button class="btn ghost" onclick="closeM()">取消</button><button class="btn blood" onclick="saveEdit()">保存</button></div>';
   document.getElementById('modal').classList.add('on');
@@ -179,7 +252,7 @@ function uploadWithRetry(fd,tries){
 }
 function saveEdit(){
   const finish=function(imgArr){
-    const body={抽屉号:val('f_id'),品种:val('f_sp'),性别:val('f_gd'),处置:val('f_dp'),出生日期:val('f_bd'),体重:Number(val('f_wt')||0),供货价:Number(val('f_sp2')||0),建议价格:val('f_pr')};
+    const body={抽屉号:val('f_id'),品种:val('f_sp'),性别:val('f_gd'),处置:val('f_dp'),出生日期:val('f_bd'),体重:Number(val('f_wt')||0),供货价:Number(val('f_sp2')||0),建议价格:val('f_pr'),售出价:Number(val('f_sprice')||0),收款状态:val('f_rstatus'),收货方:val('f_party'),收款日期:val('f_pdate')};
     if(EDITING)body.record_id=EDITING;
     if(imgArr)body['图片']=imgArr;
     fetch('/api/total',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})

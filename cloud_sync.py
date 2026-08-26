@@ -29,6 +29,33 @@ ANCHOR2 = "tblEXYGLRS2MEgEQ"
 MAP = ["抽屉号", "品种", "性别", "出生日期", "体重(g)", "供货价", "建议价格"]
 TMP = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".sync_tmp")
 
+# 销售收款情况所需的字段（加进总台账，单一数据源）。ensure_sales_fields() 会幂等创建。
+SALES_FIELDS = [
+    {"name": "售出价", "type": 2, "property": {"formatter": "0.00"}},
+    {"name": "收款状态", "type": 3,
+     "property": {"options": [{"name": "未收"}, {"name": "部分收"}, {"name": "已收"}]}},
+    {"name": "收货方", "type": 1, "property": {}},
+    {"name": "收款日期", "type": 5,
+     "property": {"auto_fill": False, "date_formatter": "yyyy-MM-dd"}},
+]
+
+
+def ensure_sales_fields():
+    """幂等：若总台账尚未含销售/收款字段则创建，已存在则跳过。失败不抛错（不影响主流程）。"""
+    try:
+        existing = {x.get("field_name") for x in f.list_fields(FILE1, TOTAL)}
+    except Exception as e:
+        print("ensure_sales_fields 读取字段失败:", e)
+        return
+    for spec in SALES_FIELDS:
+        if spec["name"] in existing:
+            continue
+        try:
+            f.create_field(FILE1, TOTAL, spec["name"], spec["type"], spec.get("property"))
+            print("  已创建字段:", spec["name"])
+        except Exception as e:
+            print("  创建字段失败(%s):" % spec["name"], e)
+
 
 def _norm_date(v):
     """毫秒时间戳 int / ISO / 字符串 -> 显示用 'YYYY-MM-DD'。"""
@@ -80,8 +107,10 @@ def normalize(rec):
     fld = rec.get("fields", {})
     out = {"record_id": rid}
     for k, v in fld.items():
-        if k in ("出生日期", "租借日期", "归还日期"):
+        if k in ("出生日期", "租借日期", "归还日期", "收款日期"):
             out[k] = _norm_date(v)
+        elif isinstance(v, dict) and "text" in v:  # 单选等可能返回 {text,value}
+            out[k] = v["text"]
         else:
             out[k] = v
     att = fld.get("图片")
@@ -221,7 +250,13 @@ def add_total(fields):
         "供货价": _num(fields.get("供货价")),
         "建议价格": fields.get("建议价格", ""),
         "处置": fields.get("处置", "在售"),
+        "售出价": _num(fields.get("售出价")),
     }
+    for k in ("收款状态", "收货方"):
+        if fields.get(k):
+            payload[k] = fields[k]
+    if fields.get("收款日期"):
+        payload["收款日期"] = _to_ms(fields["收款日期"])
     if fields.get("图片"):
         payload["图片"] = fields["图片"]
     rec = f.create_record(FILE1, TOTAL, payload)
@@ -230,7 +265,7 @@ def add_total(fields):
 
 def update_total(record_id, fields):
     payload = {}
-    for k in ("抽屉号", "品种", "性别", "建议价格", "处置"):
+    for k in ("抽屉号", "品种", "性别", "建议价格", "处置", "收款状态", "收货方"):
         if k in fields and fields[k] != "":
             payload[k] = fields[k]
     if "出生日期" in fields:
@@ -239,6 +274,10 @@ def update_total(record_id, fields):
         payload["体重(g)"] = _num(fields["体重(g)"])
     if "供货价" in fields:
         payload["供货价"] = _num(fields["供货价"])
+    if "售出价" in fields:
+        payload["售出价"] = _num(fields["售出价"])
+    if fields.get("收款日期"):
+        payload["收款日期"] = _to_ms(fields["收款日期"])
     if fields.get("图片"):
         payload["图片"] = fields["图片"]
     f.update_record(FILE1, TOTAL, record_id, payload)
